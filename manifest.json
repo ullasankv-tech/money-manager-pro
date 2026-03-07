@@ -1,7 +1,7 @@
 {
   "name": "Money Manager Pro",
   "short_name": "Money Pro",
-  "description": "Personal Finance Manager — track income, expenses, loans and savings goals",
+  "description": "Personal Finance Manager \u2014 track income, expenses, loans and savings goals",
   "start_url": "/money-manager-pro/index.html",
   "scope": "/money-manager-pro/",
   "display": "standalone",
@@ -9,7 +9,10 @@
   "background_color": "#ffffff",
   "theme_color": "#1565c0",
   "lang": "en-IN",
-  "categories": ["finance", "productivity"],
+  "categories": [
+    "finance",
+    "productivity"
+  ],
   "icons": [
     {
       "src": "/money-manager-pro/icon-192.png",
@@ -32,5 +35,6 @@
       "form_factor": "narrow",
       "label": "Home Screen"
     }
-  ]
+  ],
+  "version": "1.2.0"
 }

@@ -8,9 +8,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Money Manager Pro">
-<meta name="description" content="Personal Finance Manager — track income, expenses, loans and savings goals">
+<meta name="description" content="Best personal finance app for India. Track income, expenses, loans, savings goals, net worth and bank SMS. Works offline. By Ullasan KV, Kerala.">
 <meta name="application-name" content="Money Manager Pro">
-<title>Money Manager Pro</title>
+<title>Money Manager Pro — Personal Finance Tracker</title>
 <link rel="manifest" href="manifest.json">
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -366,6 +366,133 @@ body{background:var(--bg);color:var(--text);display:flex;flex-direction:column;t
 .premium-badge{display:inline-block;background:linear-gradient(135deg,#f9ca24,#f0932b);color:#fff;font-size:0.62rem;font-weight:800;padding:2px 7px;border-radius:10px;margin-left:5px;vertical-align:middle;}
 .premium-upgrade-strip{background:linear-gradient(135deg,#1a1a2e,#1565c0);color:#fff;padding:10px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;border-radius:14px;margin-bottom:12px;}
 
+
+/* ── FINANCIAL HEALTH SCORE ── */
+.health-card{background:linear-gradient(135deg,#1a1a2e,#1565c0);border-radius:20px;padding:18px;margin-bottom:14px;color:#fff;}
+.health-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.health-title{font-size:0.88rem;font-weight:800;opacity:0.9;}
+.health-score-ring{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-direction:column;border:4px solid rgba(255,255,255,0.2);position:relative;flex-shrink:0;}
+.health-score-num{font-size:1.4rem;font-weight:900;line-height:1;}
+.health-score-lbl{font-size:0.52rem;opacity:0.8;font-weight:700;}
+.health-grade{font-size:0.72rem;font-weight:800;padding:3px 10px;border-radius:20px;margin-top:4px;}
+.health-bars{display:flex;flex-direction:column;gap:8px;}
+.health-bar-row{display:flex;align-items:center;gap:8px;}
+.health-bar-label{font-size:0.68rem;opacity:0.8;width:80px;flex-shrink:0;}
+.health-bar-track{flex:1;height:6px;background:rgba(255,255,255,0.15);border-radius:3px;overflow:hidden;}
+.health-bar-fill{height:100%;border-radius:3px;transition:width 0.8s cubic-bezier(0.34,1.56,0.64,1);}
+.health-bar-val{font-size:0.65rem;font-weight:700;width:28px;text-align:right;opacity:0.9;}
+.health-tip{margin-top:12px;padding:10px;background:rgba(255,255,255,0.1);border-radius:10px;font-size:0.72rem;opacity:0.9;line-height:1.5;}
+
+/* ── DAILY SPENDING LIMIT ── */
+.daily-limit-card{border-radius:16px;padding:14px;margin-bottom:14px;border:2px solid var(--border);background:var(--surface);}
+.daily-limit-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.daily-limit-title{font-size:0.85rem;font-weight:800;}
+.daily-limit-edit{background:none;border:1.5px solid var(--border);border-radius:8px;padding:3px 10px;font-size:0.7rem;font-weight:700;cursor:pointer;color:#4d96ff;font-family:var(--font);}
+.daily-limit-track{height:10px;background:var(--bg);border-radius:5px;overflow:hidden;margin-bottom:8px;}
+.daily-limit-fill{height:100%;border-radius:5px;transition:width 0.6s ease;}
+.daily-limit-row{display:flex;justify-content:space-between;align-items:center;}
+.daily-limit-spent{font-size:0.82rem;font-weight:800;}
+.daily-limit-remain{font-size:0.72rem;color:var(--muted);}
+.daily-limit-warning{display:flex;align-items:center;gap:6px;margin-top:8px;padding:7px 10px;background:#fff3e0;border-radius:8px;font-size:0.72rem;font-weight:700;color:#e65100;display:none;}
+
+/* ── BILL REMINDERS ── */
+.reminder-card{border-radius:14px;border:2px solid var(--border);padding:12px 14px;margin-bottom:10px;background:var(--surface);display:flex;align-items:center;gap:12px;}
+.reminder-icon{font-size:1.6rem;flex-shrink:0;}
+.reminder-body{flex:1;}
+.reminder-name{font-size:0.85rem;font-weight:800;}
+.reminder-meta{font-size:0.7rem;color:var(--muted);margin-top:2px;}
+.reminder-badge{padding:3px 10px;border-radius:20px;font-size:0.65rem;font-weight:800;flex-shrink:0;}
+.reminder-badge.due{background:#ffebee;color:#e53935;}
+.reminder-badge.soon{background:#fff3e0;color:#e65100;}
+.reminder-badge.ok{background:#e8f5e9;color:#2e7d32;}
+.reminder-badge.paid{background:#e8eaf6;color:#3949ab;}
+.reminders-empty{text-align:center;padding:24px;color:var(--muted);font-size:0.82rem;}
+
+
+/* ── ONBOARDING ── */
+.onboard-screen{position:fixed;inset:0;background:#fff;z-index:20000;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:40px 24px 32px;}
+.onboard-slides{width:100%;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.onboard-icon{font-size:5rem;margin-bottom:20px;animation:bounceIn 0.6s ease;}
+.onboard-title{font-size:1.4rem;font-weight:900;color:#1a1a2e;text-align:center;margin-bottom:12px;}
+.onboard-desc{font-size:0.88rem;color:#666;text-align:center;line-height:1.7;max-width:300px;}
+.onboard-dots{display:flex;gap:8px;margin:24px 0;}
+.onboard-dot{width:8px;height:8px;border-radius:4px;background:#e0e0e0;transition:all 0.3s;}
+.onboard-dot.active{width:24px;background:#1565c0;}
+.onboard-btn{width:100%;padding:16px;background:linear-gradient(135deg,#1565c0,#4d96ff);border:none;border-radius:16px;color:#fff;font-size:1rem;font-weight:800;cursor:pointer;font-family:var(--font);box-shadow:0 6px 20px rgba(21,101,192,0.35);}
+.onboard-skip{background:none;border:none;color:#aaa;font-size:0.82rem;cursor:pointer;padding:12px;font-family:var(--font);}
+@keyframes bounceIn{0%{transform:scale(0.5);opacity:0;}70%{transform:scale(1.1);}100%{transform:scale(1);opacity:1;}}
+
+/* ── NET WORTH ── */
+.networth-card{background:linear-gradient(135deg,#1a1a2e,#2d3561);border-radius:20px;padding:20px;color:#fff;margin-bottom:14px;}
+.networth-total{text-align:center;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.15);margin-bottom:16px;}
+.networth-total-label{font-size:0.78rem;opacity:0.7;margin-bottom:4px;}
+.networth-total-amount{font-size:2rem;font-weight:900;}
+.networth-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.networth-col-title{font-size:0.72rem;font-weight:800;opacity:0.7;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;}
+.networth-item{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.08);}
+.networth-item-name{font-size:0.72rem;opacity:0.85;}
+.networth-item-val{font-size:0.75rem;font-weight:700;}
+.networth-add-btn{width:100%;margin-top:10px;padding:9px;background:rgba(255,255,255,0.12);border:1.5px dashed rgba(255,255,255,0.3);border-radius:10px;color:#fff;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:var(--font);}
+.nw-form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+
+/* ── SMS AUTO-READ ── */
+.sms-panel{background:linear-gradient(135deg,#e8f5e9,#f3e5f5);border-radius:16px;padding:16px;margin-bottom:14px;border:2px solid #c8e6c9;}
+.sms-status-dot{width:10px;height:10px;border-radius:50%;background:#e0e0e0;display:inline-block;margin-right:6px;}
+.sms-status-dot.active{background:#00b894;box-shadow:0 0 8px #00b894;}
+.sms-txn-item{display:flex;align-items:center;gap:10px;padding:10px;background:#fff;border-radius:12px;margin-bottom:8px;border:1.5px solid #e8f5e9;cursor:pointer;}
+.sms-txn-approve{padding:5px 12px;background:#00b894;border:none;border-radius:20px;color:#fff;font-size:0.7rem;font-weight:700;cursor:pointer;font-family:var(--font);}
+.sms-txn-ignore{padding:5px 10px;background:#ffebee;border:none;border-radius:20px;color:#e53935;font-size:0.7rem;font-weight:700;cursor:pointer;font-family:var(--font);}
+
+
+/* ══════════════════════════════════════
+   DAILY REGISTER — Excel-style
+══════════════════════════════════════ */
+.reg-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
+.reg-search{flex:1;min-width:120px;padding:9px 12px;border:2px solid var(--border);border-radius:10px;font-size:0.82rem;background:var(--bg);color:var(--text);outline:none;font-family:var(--font);}
+.reg-btn{padding:8px 14px;border:none;border-radius:10px;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:var(--font);white-space:nowrap;}
+.reg-btn-primary{background:linear-gradient(135deg,#1565c0,#4d96ff);color:#fff;}
+.reg-btn-green{background:linear-gradient(135deg,#00b894,#55efc4);color:#fff;}
+.reg-btn-outline{background:var(--bg);border:2px solid var(--border);color:var(--text);}
+.reg-btn-danger{background:#ffebee;color:#e53935;border:1.5px solid #ffcdd2;}
+
+/* Sheet tabs */
+.reg-sheets-bar{display:flex;gap:0;overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:0;border-bottom:2px solid var(--border);}
+.reg-sheet-tab{padding:8px 16px;font-size:0.78rem;font-weight:700;cursor:pointer;border:none;background:transparent;color:var(--muted);white-space:nowrap;border-bottom:3px solid transparent;margin-bottom:-2px;font-family:var(--font);transition:all 0.2s;}
+.reg-sheet-tab.active{color:#1565c0;border-bottom-color:#1565c0;background:var(--surface);}
+.reg-sheet-tab:hover{background:var(--bg);}
+.reg-add-sheet{padding:8px 12px;font-size:1rem;cursor:pointer;border:none;background:transparent;color:#4d96ff;font-weight:900;}
+
+/* Grid */
+.reg-grid-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:12px;border:2px solid var(--border);margin-top:0;}
+.reg-grid{border-collapse:collapse;min-width:100%;font-size:0.78rem;}
+.reg-grid th{background:linear-gradient(135deg,#1565c0,#4d96ff);color:#fff;padding:10px 12px;text-align:left;font-weight:700;white-space:nowrap;position:sticky;top:0;z-index:2;}
+.reg-grid th:first-child{background:#1a1a2e;min-width:36px;text-align:center;width:36px;}
+.reg-grid td{padding:8px 12px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap;}
+.reg-grid td:first-child{background:var(--bg);font-weight:700;color:var(--muted);text-align:center;font-size:0.7rem;}
+.reg-grid tr:hover td{background:#f0f7ff;}
+.reg-grid tr:last-child td{border-bottom:none;}
+.reg-cell-input{border:none;background:transparent;font-size:0.78rem;color:var(--text);font-family:var(--font);width:100%;min-width:80px;outline:none;padding:2px 0;}
+.reg-cell-input:focus{background:#e8f4ff;border-radius:4px;padding:2px 4px;}
+.reg-add-row{width:100%;padding:10px;background:var(--bg);border:none;border-top:2px dashed var(--border);color:#4d96ff;font-weight:700;font-size:0.78rem;cursor:pointer;font-family:var(--font);border-radius:0 0 10px 10px;}
+.reg-col-header{display:flex;align-items:center;gap:5px;}
+.reg-col-del{background:rgba(255,255,255,0.2);border:none;border-radius:4px;color:#fff;font-size:0.65rem;cursor:pointer;padding:1px 5px;line-height:1;}
+.reg-row-del{background:#ffebee;border:none;border-radius:6px;color:#e53935;font-size:0.65rem;cursor:pointer;padding:3px 7px;font-weight:700;}
+
+/* Empty state */
+.reg-empty{text-align:center;padding:40px 20px;color:var(--muted);}
+.reg-empty-icon{font-size:3rem;margin-bottom:12px;}
+
+/* Sheet card in picker */
+.sheet-picker-item{display:flex;align-items:center;gap:12px;padding:12px;border:2px solid var(--border);border-radius:12px;margin-bottom:8px;cursor:pointer;transition:border-color 0.2s;}
+.sheet-picker-item.active{border-color:#1565c0;background:#e8f4ff;}
+
+
+/* Insert row/col buttons */
+.reg-ins-row-btn{background:#e8f4ff;border:1.5px solid #4d96ff;border-radius:6px;color:#1565c0;font-size:0.7rem;font-weight:900;cursor:pointer;padding:1px 5px;line-height:1.4;display:block;}
+.reg-ins-row-btn:hover{background:#1565c0;color:#fff;}
+.reg-col-ins{background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);border-radius:4px;color:#fff;font-size:0.65rem;cursor:pointer;padding:1px 5px;line-height:1.4;margin-left:auto;flex-shrink:0;}
+.reg-col-ins:hover{background:rgba(255,255,255,0.4);}
+
 </style>
 </head>
 <body>
@@ -472,6 +599,41 @@ body{background:var(--bg);color:var(--text);display:flex;flex-direction:column;t
           <div class="bal-item"><div class="bal-item-label">↓ Expense</div><div class="bal-item-amount" id="monthExpense">₹0</div></div>
           <div class="bal-item"><div class="bal-item-label">💾 Saved</div><div class="bal-item-amount" id="monthSaved">₹0</div></div>
         </div>
+      </div>
+
+      <!-- FINANCIAL HEALTH SCORE -->
+      <div class="health-card" id="healthCard">
+        <div class="health-top">
+          <div>
+            <div class="health-title">💚 Financial Health Score</div>
+            <div id="healthGrade" class="health-grade" style="margin-top:6px;"></div>
+          </div>
+          <div class="health-score-ring" id="healthRing">
+            <div class="health-score-num" id="healthScoreNum">--</div>
+            <div class="health-score-lbl">/ 100</div>
+          </div>
+        </div>
+        <div class="health-bars">
+          <div class="health-bar-row"><span class="health-bar-label">💾 Savings Rate</span><div class="health-bar-track"><div class="health-bar-fill" id="hb1" style="background:#00b894;width:0%"></div></div><span class="health-bar-val" id="hv1">0%</span></div>
+          <div class="health-bar-row"><span class="health-bar-label">💹 Budget Control</span><div class="health-bar-track"><div class="health-bar-fill" id="hb2" style="background:#4d96ff;width:0%"></div></div><span class="health-bar-val" id="hv2">0%</span></div>
+          <div class="health-bar-row"><span class="health-bar-label">🎯 Goals Progress</span><div class="health-bar-track"><div class="health-bar-fill" id="hb3" style="background:#cc5de8;width:0%"></div></div><span class="health-bar-val" id="hv3">0%</span></div>
+          <div class="health-bar-row"><span class="health-bar-label">📅 Consistency</span><div class="health-bar-track"><div class="health-bar-fill" id="hb4" style="background:#f9ca24;width:0%"></div></div><span class="health-bar-val" id="hv4">0%</span></div>
+        </div>
+        <div class="health-tip" id="healthTip">Add transactions to see your financial health score!</div>
+      </div>
+
+      <!-- DAILY SPENDING LIMIT -->
+      <div class="daily-limit-card" id="dailyLimitCard">
+        <div class="daily-limit-header">
+          <div class="daily-limit-title">📅 Today's Spending</div>
+          <button class="daily-limit-edit" onclick="openSetDailyLimit()">⚙️ Set Limit</button>
+        </div>
+        <div class="daily-limit-track"><div class="daily-limit-fill" id="dailyLimitFill" style="width:0%;background:#00b894;"></div></div>
+        <div class="daily-limit-row">
+          <div class="daily-limit-spent" id="dailySpentAmt">₹0 spent today</div>
+          <div class="daily-limit-remain" id="dailyRemainAmt"></div>
+        </div>
+        <div class="daily-limit-warning" id="dailyWarning">⚠️ <span id="dailyWarningText"></span></div>
       </div>
 
       <div class="budget-alert" id="budgetAlert">
@@ -639,6 +801,110 @@ body{background:var(--bg);color:var(--text);display:flex;flex-direction:column;t
       </div>
     </div>
 
+    <!-- DAILY REGISTER TAB -->
+    <div id="tab-register" style="display:none;">
+
+      <!-- Sheet tabs bar -->
+      <div style="background:var(--surface);border-radius:16px 16px 0 0;border:2px solid var(--border);border-bottom:none;padding:10px 12px 0;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div style="font-size:0.88rem;font-weight:800;">📋 Daily Register</div>
+          <div style="display:flex;gap:6px;">
+            <button class="reg-btn reg-btn-outline" onclick="openManageColumns()" title="Manage Columns">⚙️ Columns</button>
+            <button class="reg-btn reg-btn-green" onclick="exportRegisterCSV()" title="Export CSV">📤 Export</button>
+          </div>
+        </div>
+        <div class="reg-sheets-bar" id="regSheetsBar">
+          <!-- sheet tabs filled by JS -->
+        </div>
+      </div>
+
+      <!-- Toolbar: search + add row -->
+      <div style="background:var(--surface);border:2px solid var(--border);border-top:1px solid var(--border);border-bottom:none;padding:8px 12px;">
+        <div class="reg-toolbar">
+          <input class="reg-search" id="regSearch" placeholder="🔍 Search rows..." oninput="renderRegisterGrid()"/>
+          <button class="reg-btn reg-btn-primary" onclick="addRegisterRow()">+ Add Row</button>
+          <button class="reg-btn reg-btn-danger" onclick="deleteRegisterSheet()" title="Delete sheet">🗑</button>
+        </div>
+      </div>
+
+      <!-- Grid -->
+      <div style="border:2px solid var(--border);border-top:none;border-radius:0 0 16px 16px;overflow:hidden;">
+        <div class="reg-grid-wrap" id="regGridWrap">
+          <!-- filled by JS -->
+        </div>
+        <button class="reg-add-row" onclick="addRegisterRow()">＋ Add new row</button>
+      </div>
+
+      <!-- Row count -->
+      <div style="text-align:right;font-size:0.7rem;color:var(--muted);padding:6px 4px;" id="regRowCount"></div>
+    </div>
+
+    <!-- NET WORTH TAB -->
+    <div id="tab-networth" style="display:none;">
+
+      <!-- SMS Auto-Read Panel -->
+      <div class="sms-panel" id="smsPanel">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div>
+            <div style="font-size:0.88rem;font-weight:800;color:#1a1a2e;">📲 SMS Auto-Read</div>
+            <div style="font-size:0.7rem;color:#555;margin-top:2px;"><span class="sms-status-dot" id="smsDot"></span><span id="smsStatusText">Tap to enable</span></div>
+          </div>
+          <button onclick="toggleSmsRead()" id="smsToggleBtn" style="padding:8px 16px;background:linear-gradient(135deg,#1565c0,#4d96ff);border:none;border-radius:20px;color:#fff;font-size:0.75rem;font-weight:700;cursor:pointer;font-family:var(--font);">Enable</button>
+        </div>
+        <div id="smsPendingList"></div>
+        <div id="smsEmptyMsg" style="text-align:center;font-size:0.75rem;color:#888;padding:8px;">Bank SMS transactions will appear here for quick approval</div>
+      </div>
+
+      <!-- Net Worth Summary Card -->
+      <div class="networth-card">
+        <div class="networth-total">
+          <div class="networth-total-label">💎 Total Net Worth</div>
+          <div class="networth-total-amount" id="nwTotal">₹0</div>
+          <div style="font-size:0.72rem;opacity:0.6;margin-top:4px;" id="nwSubtitle">Assets − Liabilities</div>
+        </div>
+        <div class="networth-cols">
+          <div>
+            <div class="networth-col-title" style="color:#69db7c;">✅ Assets</div>
+            <div id="nwAssetsList"></div>
+            <button class="networth-add-btn" onclick="openAddNetWorth('asset')">+ Add Asset</button>
+            <div style="margin-top:8px;font-size:0.78rem;font-weight:800;color:#69db7c;" id="nwAssetsTotal">₹0</div>
+          </div>
+          <div>
+            <div class="networth-col-title" style="color:#ff6b6b;">❌ Liabilities</div>
+            <div id="nwLiabilitiesList"></div>
+            <button class="networth-add-btn" onclick="openAddNetWorth('liability')">+ Add Liability</button>
+            <div style="margin-top:8px;font-size:0.78rem;font-weight:800;color:#ff6b6b;" id="nwLiabilitiesTotal">₹0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Net Worth Tips -->
+      <div class="panel">
+        <h3>📈 Net Worth Growth Tips</h3>
+        <div id="nwTips" style="font-size:0.8rem;color:var(--muted);line-height:1.7;"></div>
+      </div>
+    </div>
+
+    <!-- BILL REMINDERS TAB -->
+    <div id="tab-reminders" style="display:none;">
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <h3 style="margin-bottom:0;">🔔 Bill Reminders</h3>
+          <button onclick="openAddReminder()" style="padding:7px 14px;background:linear-gradient(135deg,#1565c0,#4d96ff);border:none;border-radius:20px;color:#fff;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:var(--font);">+ Add Bill</button>
+        </div>
+        <!-- Due soon alerts -->
+        <div id="reminderAlerts"></div>
+        <!-- All reminders list -->
+        <div id="remindersList"></div>
+      </div>
+
+      <!-- Calendar view of bills this month -->
+      <div class="panel">
+        <h3>📅 This Month's Bills</h3>
+        <div id="remindersCalendar"></div>
+      </div>
+    </div>
+
     <div id="tab-settings" style="display:none;">
 
       <!-- CATEGORY MASTER -->
@@ -709,13 +975,24 @@ body{background:var(--bg);color:var(--text);display:flex;flex-direction:column;t
         </div>
       </div>
 
+      <!-- QUICK LINKS -->
+      <div class="panel">
+        <h3>⚡ Quick Links</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <button onclick="showTab('reminders')" style="padding:12px;background:var(--bg);border:2px solid var(--border);border-radius:12px;font-size:0.82rem;font-weight:700;cursor:pointer;color:var(--text);font-family:var(--font);">🔔 Bill Reminders</button>
+          <button onclick="showTab('budget')" style="padding:12px;background:var(--bg);border:2px solid var(--border);border-radius:12px;font-size:0.82rem;font-weight:700;cursor:pointer;color:var(--text);font-family:var(--font);">💹 Budget Planner</button>
+          <button onclick="showTab('goals')" style="padding:12px;background:var(--bg);border:2px solid var(--border);border-radius:12px;font-size:0.82rem;font-weight:700;cursor:pointer;color:var(--text);font-family:var(--font);">🎯 Savings Goals</button>
+          <button onclick="showTab('register')" style="padding:12px;background:#e8f4ff;border:2px solid #4d96ff;border-radius:12px;font-size:0.82rem;font-weight:700;cursor:pointer;color:#1565c0;font-family:var(--font);">📋 Daily Register</button>
+        </div>
+      </div>
+
       <!-- ABOUT -->
       <div class="panel">
         <h3>ℹ️ About</h3>
         <div style="background:linear-gradient(135deg,#1565c0,#4d96ff);border-radius:16px;padding:20px;color:#fff;text-align:center;margin-bottom:12px;">
           <div style="font-size:2.5rem;margin-bottom:8px;">💰</div>
           <div style="font-size:1rem;font-weight:800;letter-spacing:0.02em;">Money Manager Pro</div>
-          <div style="font-size:0.72rem;opacity:0.85;margin-top:4px;">Version 1.0.0</div>
+          <div style="font-size:0.72rem;opacity:0.85;margin-top:4px;">Version 1.2.0 · Play Store Edition</div>
           <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.25);">
             <div style="font-size:0.72rem;opacity:0.7;">Developed by</div>
             <div style="font-size:0.92rem;font-weight:800;margin-top:2px;">Ullasan KV</div>
@@ -750,9 +1027,9 @@ body{background:var(--bg);color:var(--text);display:flex;flex-direction:column;t
   <div class="bottom-nav" id="bottomNav">
     <button class="nav-item active" id="nav-home" onclick="showTab('home')"><span class="nav-icon">🏠</span><span class="nav-label">Home</span></button>
     <button class="nav-item" id="nav-report" onclick="showTab('report')"><span class="nav-icon">📊</span><span class="nav-label">Reports</span></button>
-    <button class="nav-item" id="nav-goals" onclick="showTab('goals')"><span class="nav-icon">🎯</span><span class="nav-label">Goals</span></button>
-    <button class="nav-item" id="nav-budget" onclick="showTab('budget')"><span class="nav-icon">💹</span><span class="nav-label">Budget</span></button>
+    <button class="nav-item" id="nav-register" onclick="showTab('register')"><span class="nav-icon">📋</span><span class="nav-label">Register</span></button>
     <button class="nav-item" id="nav-loans" onclick="showTab('loans')"><span class="nav-icon">🏦</span><span class="nav-label">Loans</span></button>
+    <button class="nav-item" id="nav-networth" onclick="showTab('networth')"><span class="nav-icon">💎</span><span class="nav-label">Worth</span></button>
     <button class="nav-item" id="nav-settings" onclick="showTab('settings')"><span class="nav-icon">⚙️</span><span class="nav-label">Settings</span></button>
   </div>
 </div>
@@ -1065,7 +1342,7 @@ async function loadSettings(){
     const pin       =pinRec?pinRec.value:null;
     const pinEnabled=pinEnRec?pinEnRec.value==='true':false;
     isDark=!!settings.dark;
-    if(isDark){document.body.classList.add('dark');document.getElementById('darkToggle').checked=true;}
+    if(isDark){document.body.classList.add('dark');const dtEl=document.getElementById('darkModeToggle');if(dtEl)dtEl.checked=true;}
     document.getElementById('pinToggle').checked=pinEnabled;
     return{pin,pinEnabled};
   }catch{return{pin:null,pinEnabled:false};}
@@ -1247,6 +1524,15 @@ function showApp(){
   const chipName=document.getElementById('userChipName');
   if(chipName) chipName.textContent=currentUser.name.split(' ')[0];
   document.getElementById('topAvatar').textContent=currentUser.avatar;
+  // Load all features
+  loadDailyLimit().then(()=>renderDailyLimit());
+  loadReminders().then(()=>checkRemindersDueToday());
+  loadNetWorth().then(()=>{});
+  loadRegister();
+  loadSmsSettings();
+  renderHealthScore();
+  // Show onboarding on first launch
+  setTimeout(checkOnboarding, 800);
   // Show banner ad for free users, 2s delay for smooth load
   setTimeout(()=>{ if(!isPremium()) showBannerAd(); }, 2000);
   // Render premium badge if applicable
@@ -2058,9 +2344,11 @@ async function clearAllData(){
 // ═══════════════════════════════════════
 function showTab(tab,pushHistory=true){
   if(pushHistory) history.pushState({tab:tab},'');
-  ['home','report','goals','budget','loans','settings'].forEach(t=>{
-    document.getElementById('tab-'+t).style.display=t===tab?'block':'none';
-    document.getElementById('nav-'+t).classList.toggle('active',t===tab);
+  ['home','report','goals','budget','loans','reminders','networth','register','settings'].forEach(t=>{
+    const tabEl=document.getElementById('tab-'+t);
+    const navEl=document.getElementById('nav-'+t);
+    if(tabEl) tabEl.style.display=t===tab?'block':'none';
+    if(navEl) navEl.classList.toggle('active',t===tab);
   });
   document.getElementById('appContent').scrollTo({top:0,behavior:'smooth'});
   if(tab==='report')renderReport();
@@ -2068,11 +2356,14 @@ function showTab(tab,pushHistory=true){
   if(tab==='goals'){renderGoals();renderRecurring();renderEmis();}
   if(tab==='settings')renderCategoryMaster();
   if(tab==='loans'){renderLoans();renderLoanReport();checkLoanOverdue();}
+  if(tab==='reminders'){renderReminders();}
+  if(tab==='register'){renderRegister();}
+  if(tab==='networth'){renderNetWorth();}
   // Show/hide premium strip
   const strip=document.getElementById('premiumStrip');
   if(strip) strip.style.display=(!currentUser||isPremium())?'none':'flex';
 }
-function renderAll(){renderHome();renderMiniChart();checkBudgetAlert();if(document.getElementById("nav-loans").classList.contains("active"))checkLoanOverdue();}
+function renderAll(){renderHome();renderMiniChart();checkBudgetAlert();renderHealthScore();renderDailyLimit();if(document.getElementById("nav-loans").classList.contains("active"))checkLoanOverdue();}
 
 
 // ═══════════════════════════════════════
@@ -2623,6 +2914,945 @@ window.addEventListener('popstate',e=>{
 });
 
 // ══════════════════════════════════════════════════════
+// FEATURE 1: FINANCIAL HEALTH SCORE ENGINE
+// ══════════════════════════════════════════════════════
+function calcHealthScore(){
+  const today=new Date();
+  const mo=today.getMonth(), yr=today.getFullYear();
+  const mt=transactions.filter(t=>{const d=new Date(t.date);return d.getMonth()===mo&&d.getFullYear()===yr;});
+  const mInc=mt.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const mExp=mt.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+
+  // 1. Savings Rate (0-30 pts) — ideally save 20%+ of income
+  let savingsRate=mInc>0?Math.max(0,(mInc-mExp)/mInc):0;
+  const savingsPts=Math.round(Math.min(30,savingsRate*150));
+  const savingsPct=Math.round(savingsRate*100);
+
+  // 2. Budget Control (0-25 pts) — how well spending stays in budget
+  let budgetPts=25;
+  let budgetPct=100;
+  const budgetCats=Object.keys(budgets);
+  if(budgetCats.length>0){
+    let over=0;
+    budgetCats.forEach(cat=>{
+      const spent=mt.filter(t=>t.type==='expense'&&t.category===cat).reduce((s,t)=>s+t.amount,0);
+      if(spent>budgets[cat]) over++;
+    });
+    budgetPct=Math.round(((budgetCats.length-over)/budgetCats.length)*100);
+    budgetPts=Math.round((budgetPct/100)*25);
+  }
+
+  // 3. Goals Progress (0-25 pts)
+  let goalsPts=0, goalsPct=0;
+  if(goals.length>0){
+    const totalProg=goals.reduce((s,g)=>s+(g.saved/Math.max(1,g.target)),0);
+    goalsPct=Math.round((totalProg/goals.length)*100);
+    goalsPts=Math.round(Math.min(25,(goalsPct/100)*25));
+  } else {goalsPct=0;goalsPts=10;}// bonus pts if no goals needed
+
+  // 4. Consistency (0-20 pts) — transactions entered regularly
+  const daysInMonth=new Date(yr,mo+1,0).getDate();
+  const daysPassed=Math.min(today.getDate(),daysInMonth);
+  const txnDays=new Set(mt.map(t=>t.date)).size;
+  const consistPct=Math.round((txnDays/Math.max(1,daysPassed))*100);
+  const consistPts=Math.round(Math.min(20,(consistPct/100)*20));
+
+  const total=Math.min(100,savingsPts+budgetPts+goalsPts+consistPts);
+
+  // Grade
+  let grade,gradeColor,tip;
+  if(total>=85){grade='🌟 Excellent';gradeColor='#00b894';tip='Outstanding financial discipline! You are on track for a secure future.';}
+  else if(total>=70){grade='💚 Very Good';gradeColor='#4d96ff';tip='Great job! Small improvements in savings rate will push you to Excellent.';}
+  else if(total>=55){grade='🟡 Good';gradeColor='#f9ca24';tip='Decent performance. Try to set budgets for your top expense categories.';}
+  else if(total>=40){grade='🟠 Fair';gradeColor='#ff922b';tip='Room for improvement. Start by setting a savings goal this month.';}
+  else{grade="🔴 Needs Work";gradeColor="#ff6b6b";tip="Don't worry — track daily expenses consistently and you'll improve fast!";}
+
+  return{total,savingsPct,budgetPct,goalsPct,consistPct,grade,gradeColor,tip};
+}
+
+function renderHealthScore(){
+  const h=calcHealthScore();
+  document.getElementById('healthScoreNum').textContent=h.total;
+  const ring=document.getElementById('healthRing');
+  ring.style.borderColor=h.gradeColor;
+  ring.style.boxShadow=`0 0 18px ${h.gradeColor}55`;
+  const gradeEl=document.getElementById('healthGrade');
+  gradeEl.textContent=h.grade;
+  gradeEl.style.background=h.gradeColor+'22';
+  gradeEl.style.color=h.gradeColor;
+  // bars
+  setTimeout(()=>{
+    document.getElementById('hb1').style.width=Math.min(100,h.savingsPct)+'%';
+    document.getElementById('hb2').style.width=Math.min(100,h.budgetPct)+'%';
+    document.getElementById('hb3').style.width=Math.min(100,h.goalsPct)+'%';
+    document.getElementById('hb4').style.width=Math.min(100,h.consistPct)+'%';
+  },100);
+  document.getElementById('hv1').textContent=h.savingsPct+'%';
+  document.getElementById('hv2').textContent=h.budgetPct+'%';
+  document.getElementById('hv3').textContent=h.goalsPct+'%';
+  document.getElementById('hv4').textContent=h.consistPct+'%';
+  document.getElementById('healthTip').textContent='💡 '+h.tip;
+}
+
+// ══════════════════════════════════════════════════════
+// FEATURE 2: DAILY SPENDING LIMIT
+// ══════════════════════════════════════════════════════
+let dailyLimit=0;
+
+async function loadDailyLimit(){
+  try{
+    const r=await dbGet('settings','daily_limit_'+currentUser.username);
+    dailyLimit=r?parseFloat(r.value):0;
+  }catch{dailyLimit=0;}
+}
+async function saveDailyLimit(val){
+  dailyLimit=val;
+  await dbPut('settings',{key:'daily_limit_'+currentUser.username,value:String(val)});
+}
+
+function renderDailyLimit(){
+  const today=new Date().toISOString().split('T')[0];
+  const todayExp=transactions.filter(t=>t.type==='expense'&&t.date===today).reduce((s,t)=>s+t.amount,0);
+  const spentEl=document.getElementById('dailySpentAmt');
+  const remainEl=document.getElementById('dailyRemainAmt');
+  const fillEl=document.getElementById('dailyLimitFill');
+  const warnEl=document.getElementById('dailyWarning');
+  const warnTxt=document.getElementById('dailyWarningText');
+  spentEl.textContent=fmt(todayExp)+' spent today';
+  if(dailyLimit>0){
+    const pct=Math.min(100,Math.round((todayExp/dailyLimit)*100));
+    const remain=dailyLimit-todayExp;
+    fillEl.style.width=pct+'%';
+    if(pct>=100){fillEl.style.background='#ff6b6b';remainEl.textContent='Limit exceeded by '+fmt(Math.abs(remain));}
+    else if(pct>=80){fillEl.style.background='#ff922b';remainEl.textContent=fmt(remain)+' remaining';}
+    else{fillEl.style.background='#00b894';remainEl.textContent=fmt(remain)+' remaining';}
+    // Warning
+    if(pct>=100){warnEl.style.display='flex';warnTxt.textContent='Daily limit exceeded! Consider reducing expenses.';}
+    else if(pct>=80){warnEl.style.display='flex';warnTxt.textContent='Approaching daily limit — only '+fmt(remain)+' left!';}
+    else{warnEl.style.display='none';}
+  } else {
+    fillEl.style.width='0%';
+    remainEl.textContent='No limit set';
+    warnEl.style.display='none';
+  }
+}
+
+function openSetDailyLimit(){
+  const cur=dailyLimit>0?dailyLimit:'';
+  const val=prompt('Set daily spending limit in Rupees (enter 0 to remove)',cur);
+  if(val===null)return;
+  const num=parseFloat(val)||0;
+  saveDailyLimit(num).then(()=>{
+    renderDailyLimit();
+    showToast(num>0?'✅ Daily limit set to '+fmt(num):'✅ Daily limit removed');
+  });
+}
+
+// ══════════════════════════════════════════════════════
+// FEATURE 3: BILL REMINDERS ENGINE
+// ══════════════════════════════════════════════════════
+let reminders=[];
+
+async function loadReminders(){
+  try{
+    const all=await dbGetAll('settings');
+    const r=all.find(x=>x.key==='reminders_'+currentUser.username);
+    reminders=r?JSON.parse(r.value):[];
+  }catch{reminders=[];}
+}
+async function saveReminders(){
+  await dbPut('settings',{key:'reminders_'+currentUser.username,value:JSON.stringify(reminders)});
+}
+
+function renderReminders(){
+  const today=new Date();
+  const todayD=today.getDate();
+  const sorted=[...reminders].sort((a,b)=>a.dueDay-b.dueDay);
+
+  // Alerts box
+  const alertsEl=document.getElementById('reminderAlerts');
+  const dueSoon=sorted.filter(r=>{
+    if(r.paid)return false;
+    const diff=r.dueDay-todayD;
+    return diff>=0&&diff<=3;
+  });
+  if(dueSoon.length){
+    alertsEl.innerHTML=`<div style="background:#fff3e0;border-radius:12px;padding:12px;margin-bottom:12px;border-left:4px solid #ff922b;">
+      <div style="font-size:0.78rem;font-weight:800;color:#e65100;margin-bottom:6px;">⚠️ ${dueSoon.length} bill(s) due soon!</div>
+      ${dueSoon.map(r=>`<div style="font-size:0.72rem;color:#bf360c;margin-top:3px;">${r.emoji} ${r.name} — due on ${r.dueDay}${getDaySuffix(r.dueDay)} (${fmt(r.amount)})</div>`).join('')}
+    </div>`;
+  } else alertsEl.innerHTML='';
+
+  // Main list
+  const listEl=document.getElementById('remindersList');
+  if(!reminders.length){
+    listEl.innerHTML=`<div class="reminders-empty">🔔<br><br>No bill reminders yet.<br>Tap <strong>+ Add Bill</strong> to track your recurring bills!</div>`;
+    return;
+  }
+  listEl.innerHTML=sorted.map(r=>{
+    const diff=r.dueDay-todayD;
+    let badge,badgeClass;
+    if(r.paid){badge='✅ Paid';badgeClass='paid';}
+    else if(diff<0){badge='Overdue';badgeClass='due';}
+    else if(diff===0){badge='Due Today!';badgeClass='due';}
+    else if(diff<=3){badge='Due in '+diff+'d';badgeClass='soon';}
+    else{badge='Due '+r.dueDay+getDaySuffix(r.dueDay);badgeClass='ok';}
+    return`<div class="reminder-card">
+      <div class="reminder-icon">${r.emoji}</div>
+      <div class="reminder-body">
+        <div class="reminder-name">${r.name}</div>
+        <div class="reminder-meta">${fmt(r.amount)} · every month · ${r.category}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;">
+        <span class="reminder-badge ${badgeClass}">${badge}</span>
+        <div style="display:flex;gap:4px;">
+          ${!r.paid?`<button onclick="markReminderPaid(${r.id})" style="font-size:0.62rem;padding:3px 7px;background:#e8f5e9;border:none;border-radius:6px;cursor:pointer;font-weight:700;color:#2e7d32;">✅ Pay</button>`:`<button onclick="markReminderUnpaid(${r.id})" style="font-size:0.62rem;padding:3px 7px;background:#e8eaf6;border:none;border-radius:6px;cursor:pointer;font-weight:700;color:#3949ab;">↩ Undo</button>`}
+          <button onclick="deleteReminder(${r.id})" style="font-size:0.62rem;padding:3px 7px;background:#ffebee;border:none;border-radius:6px;cursor:pointer;font-weight:700;color:#e53935;">🗑</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Calendar view
+  renderRemindersCalendar();
+}
+
+function renderRemindersCalendar(){
+  const today=new Date();
+  const daysInMonth=new Date(today.getFullYear(),today.getMonth()+1,0).getDate();
+  const calEl=document.getElementById('remindersCalendar');
+  if(!reminders.length){calEl.innerHTML='<div style="text-align:center;color:var(--muted);font-size:0.8rem;padding:12px;">Add bills to see calendar view</div>';return;}
+  // Build a simple list view by day
+  const byDay={};
+  reminders.forEach(r=>{if(!byDay[r.dueDay])byDay[r.dueDay]=[];byDay[r.dueDay].push(r);});
+  const days=Object.keys(byDay).sort((a,b)=>a-b);
+  calEl.innerHTML=days.map(day=>{
+    const dayReminders=byDay[day];
+    const diff=parseInt(day)-today.getDate();
+    const isToday=diff===0, isPast=diff<0;
+    return`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">
+      <div style="width:36px;height:36px;border-radius:10px;background:${isToday?'#1565c0':isPast?'#eee':'#e8f4ff'};color:${isToday?'#fff':isPast?'#aaa':'#1565c0'};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.85rem;flex-shrink:0;">${day}</div>
+      <div style="flex:1;">${dayReminders.map(r=>`<div style="font-size:0.78rem;font-weight:700;${r.paid?'text-decoration:line-through;opacity:0.5':''}">${r.emoji} ${r.name} <span style="color:var(--muted);font-weight:400;">— ${fmt(r.amount)}</span></div>`).join('')}</div>
+    </div>`;
+  }).join('');
+}
+
+function getDaySuffix(d){
+  if(d>=11&&d<=13)return'th';
+  switch(d%10){case 1:return'st';case 2:return'nd';case 3:return'rd';default:return'th';}
+}
+
+function openAddReminder(){
+  openModal('addReminderModal');
+}
+async function saveReminder(){
+  const name=document.getElementById('remName').value.trim();
+  const amount=parseFloat(document.getElementById('remAmount').value)||0;
+  const dueDay=parseInt(document.getElementById('remDueDay').value)||1;
+  const emoji=document.getElementById('remEmoji').value||'🔔';
+  const category=document.getElementById('remCategory').value||'Bill';
+  if(!name||!amount){showToast('⚠️ Please fill name and amount');return;}
+  if(dueDay<1||dueDay>31){showToast('⚠️ Due day must be 1-31');return;}
+  reminders.push({id:Date.now(),name,amount,dueDay,emoji,category,paid:false,createdAt:new Date().toISOString()});
+  await saveReminders();
+  closeModal('addReminderModal');
+  renderReminders();
+  showToast('✅ Bill reminder added!');
+  // Clear form
+  ['remName','remAmount','remDueDay'].forEach(id=>document.getElementById(id).value='');
+}
+async function markReminderPaid(id){
+  const r=reminders.find(x=>x.id===id);
+  if(!r)return;
+  r.paid=true;
+  await saveReminders();
+  renderReminders();
+  showToast('✅ '+r.name+' marked as paid!');
+  // Auto-add as expense transaction
+  if(confirm('Add '+r.name+' ('+fmt(r.amount)+') as expense transaction?')){
+    transactions.push({id:Date.now(),type:'expense',amount:r.amount,category:r.category,date:new Date().toISOString().split('T')[0],note:r.name+' bill',emoji:r.emoji});
+    await saveData();renderAll();
+  }
+}
+async function markReminderUnpaid(id){
+  const r=reminders.find(x=>x.id===id);
+  if(!r)return;
+  r.paid=false;
+  await saveReminders();
+  renderReminders();
+  showToast('↩ Marked as unpaid');
+}
+async function deleteReminder(id){
+  if(!confirm('Delete this reminder?'))return;
+  reminders=reminders.filter(r=>r.id!==id);
+  await saveReminders();
+  renderReminders();
+  showToast('🗑️ Reminder deleted');
+}
+
+// Check reminders on app open — notify if bills due today
+function checkRemindersDueToday(){
+  const today=new Date().getDate();
+  const due=reminders.filter(r=>!r.paid&&r.dueDay===today);
+  if(due.length){
+    setTimeout(()=>showToast('🔔 '+due.length+' bill(s) due today! Check Bills tab.'),3000);
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// FEATURE: NET WORTH TRACKER
+// ══════════════════════════════════════════════════════
+let netWorthItems = []; // [{id,type:'asset'|'liability',name,amount,category,emoji}]
+
+async function loadNetWorth(){
+  try{
+    const r = await dbGet('settings','networth_'+currentUser.username);
+    netWorthItems = r ? JSON.parse(r.value) : [];
+  }catch{ netWorthItems=[]; }
+}
+async function saveNetWorth(){
+  await dbPut('settings',{key:'networth_'+currentUser.username, value:JSON.stringify(netWorthItems)});
+}
+
+function renderNetWorth(){
+  const assets     = netWorthItems.filter(i=>i.type==='asset');
+  const liabilities= netWorthItems.filter(i=>i.type==='liability');
+  const totalAssets= assets.reduce((s,i)=>s+i.amount,0);
+  const totalLiab  = liabilities.reduce((s,i)=>s+i.amount,0);
+  const netWorth   = totalAssets - totalLiab;
+
+  // Total
+  const nwEl = document.getElementById('nwTotal');
+  nwEl.textContent = fmt(netWorth);
+  nwEl.style.color = netWorth >= 0 ? '#69db7c' : '#ff6b6b';
+  document.getElementById('nwSubtitle').textContent =
+    fmt(totalAssets)+' assets  −  '+fmt(totalLiab)+' liabilities';
+  document.getElementById('nwAssetsTotal').textContent = '∑ '+fmt(totalAssets);
+  document.getElementById('nwLiabilitiesTotal').textContent = '∑ '+fmt(totalLiab);
+
+  // Lists
+  const assetHTML = assets.length
+    ? assets.map(i=>`<div class="networth-item">
+        <span class="networth-item-name">${i.emoji} ${i.name}</span>
+        <div style="display:flex;align-items:center;gap:5px;">
+          <span class="networth-item-val" style="color:#69db7c;">${fmt(i.amount)}</span>
+          <button onclick="deleteNetWorthItem(${i.id})" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:0.75rem;cursor:pointer;">✕</button>
+        </div>
+      </div>`).join('')
+    : '<div style="font-size:0.7rem;opacity:0.5;padding:6px 0;">None added yet</div>';
+
+  const liabHTML = liabilities.length
+    ? liabilities.map(i=>`<div class="networth-item">
+        <span class="networth-item-name">${i.emoji} ${i.name}</span>
+        <div style="display:flex;align-items:center;gap:5px;">
+          <span class="networth-item-val" style="color:#ff6b6b;">${fmt(i.amount)}</span>
+          <button onclick="deleteNetWorthItem(${i.id})" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:0.75rem;cursor:pointer;">✕</button>
+        </div>
+      </div>`).join('')
+    : '<div style="font-size:0.7rem;opacity:0.5;padding:6px 0;">None added yet</div>';
+
+  document.getElementById('nwAssetsList').innerHTML = assetHTML;
+  document.getElementById('nwLiabilitiesList').innerHTML = liabHTML;
+
+  // Tips
+  const tips = [];
+  if(netWorth < 0) tips.push('⚠️ Your liabilities exceed assets. Focus on paying down debts first.');
+  if(totalAssets === 0) tips.push('🏦 Start building assets — even a small FD or savings counts!');
+  if(liabilities.length > 3) tips.push('💡 Multiple liabilities detected. Consider debt consolidation.');
+  if(totalAssets > 0 && (totalLiab/totalAssets) > 0.5) tips.push('📉 Debt-to-asset ratio is high. Reduce liabilities before adding new assets.');
+  if(netWorth > 100000) tips.push('🌟 Great net worth! Consider diversifying into mutual funds or gold.');
+  if(!tips.length) tips.push('📊 Track all your assets and liabilities here to see your complete financial picture.');
+  document.getElementById('nwTips').innerHTML = tips.map(t=>`<div style="margin-bottom:10px;padding:8px 10px;background:var(--bg);border-radius:8px;border-left:3px solid #4d96ff;">${t}</div>`).join('');
+}
+
+function openAddNetWorth(type){
+  document.getElementById('nwFormType').value = type;
+  document.getElementById('nwFormTitle').textContent = type==='asset' ? '✅ Add Asset' : '❌ Add Liability';
+  // Prefill category options based on type
+  const assetCats = ['Cash/Savings','Fixed Deposit','Gold/Jewellery','Property/Land','Vehicle','Stocks/MF','PPF/EPF','Other Asset'];
+  const liabCats  = ['Home Loan','Car Loan','Personal Loan','Credit Card','Education Loan','Business Loan','Other Liability'];
+  const cats = type==='asset' ? assetCats : liabCats;
+  document.getElementById('nwFormCategory').innerHTML = cats.map(c=>`<option>${c}</option>`).join('');
+  document.getElementById('nwFormEmoji').value = type==='asset' ? '💰' : '💳';
+  openModal('netWorthModal');
+}
+
+async function saveNetWorthItem(){
+  const type     = document.getElementById('nwFormType').value;
+  const name     = document.getElementById('nwFormName').value.trim();
+  const amount   = parseFloat(document.getElementById('nwFormAmount').value)||0;
+  const category = document.getElementById('nwFormCategory').value;
+  const emoji    = document.getElementById('nwFormEmoji').value||'💰';
+  if(!name||!amount){ showToast('⚠️ Please fill name and amount'); return; }
+  netWorthItems.push({id:Date.now(),type,name,amount,category,emoji});
+  await saveNetWorth();
+  closeModal('netWorthModal');
+  renderNetWorth();
+  showToast('✅ '+(type==='asset'?'Asset':'Liability')+' added!');
+  document.getElementById('nwFormName').value='';
+  document.getElementById('nwFormAmount').value='';
+}
+
+async function deleteNetWorthItem(id){
+  netWorthItems = netWorthItems.filter(i=>i.id!==id);
+  await saveNetWorth();
+  renderNetWorth();
+  showToast('🗑️ Item removed');
+}
+
+// ══════════════════════════════════════════════════════
+// FEATURE: SMS AUTO-READ (PWA — permission-based)
+// ══════════════════════════════════════════════════════
+let smsEnabled = false;
+let smsPending = []; // parsed SMS transactions awaiting approval
+
+// Bank SMS patterns — covers major Indian banks
+const SMS_PATTERNS = [
+  // Debit patterns
+  { re:/(?:debited|deducted|withdrawn|spent|paid).*?(?:rs\.?|inr|₹)\s*([\d,]+(?:\.\d+)?)/i, type:'expense' },
+  { re:/(?:rs\.?|inr|₹)\s*([\d,]+(?:\.\d+)?).*?(?:debited|deducted|withdrawn|spent)/i, type:'expense' },
+  // Credit patterns
+  { re:/(?:credited|received|deposited|refund).*?(?:rs\.?|inr|₹)\s*([\d,]+(?:\.\d+)?)/i, type:'income' },
+  { re:/(?:rs\.?|inr|₹)\s*([\d,]+(?:\.\d+)?).*?(?:credited|received|deposited)/i, type:'income' },
+];
+
+// Merchant/category hints
+const SMS_CATEGORIES = [
+  {words:['swiggy','zomato','food','restaurant','cafe','hotel'],cat:'Food & Dining'},
+  {words:['amazon','flipkart','myntra','shopping','mall','mart'],cat:'Shopping'},
+  {words:['uber','ola','rapido','metro','bus','train','irctc','fuel','petrol'],cat:'Transport'},
+  {words:['electricity','bescom','msedcl','tneb','water','gas','bsnl','airtel','jio','bill'],cat:'Utilities'},
+  {words:['hospital','medical','pharmacy','doctor','clinic','apollo','pharma'],cat:'Healthcare'},
+  {words:['emi','loan','repay','mortgage','equit'],cat:'Loan Repayment'},
+  {words:['salary','payroll','neft from','credited by'],cat:'Salary'},
+];
+
+function parseSmsAmount(body){
+  for(const p of SMS_PATTERNS){
+    const m = body.match(p.re);
+    if(m){
+      const amt = parseFloat(m[1].replace(/,/g,''));
+      if(amt > 0) return {amount:amt, type:p.type};
+    }
+  }
+  return null;
+}
+
+function guessSmsCategory(body, type){
+  const lower = body.toLowerCase();
+  for(const hint of SMS_CATEGORIES){
+    if(hint.words.some(w=>lower.includes(w))) return hint.cat;
+  }
+  return type==='expense' ? 'Other Expense' : 'Other Income';
+}
+
+function guessMerchant(body){
+  // Try to find merchant name from common patterns
+  const patterns = [
+    /at\s+([A-Z][A-Za-z\s&]{2,25}?)(?:\s+on|\s+for|\.|,|$)/,
+    /to\s+([A-Z][A-Za-z\s&]{2,20}?)(?:\s+on|\s+ref|$)/,
+    /from\s+([A-Z][A-Za-z\s&]{2,20}?)(?:\s+on|\s+to|$)/,
+  ];
+  for(const p of patterns){
+    const m = body.match(p);
+    if(m && m[1].trim().length > 2) return m[1].trim();
+  }
+  return '';
+}
+
+async function toggleSmsRead(){
+  if(smsEnabled){
+    smsEnabled = false;
+    await dbPut('settings',{key:'sms_enabled_'+currentUser.username,value:'false'});
+    updateSmsUI();
+    showToast('📵 SMS Auto-Read disabled');
+    return;
+  }
+  // Request SMS permission — works in Android WebView/TWA
+  if('permissions' in navigator){
+    try{
+      // On Android TWA this triggers SMS read permission
+      showToast('📲 Please grant SMS permission when asked');
+    }catch(e){}
+  }
+  smsEnabled = true;
+  await dbPut('settings',{key:'sms_enabled_'+currentUser.username,value:'true'});
+  updateSmsUI();
+  showToast('✅ SMS Auto-Read enabled! Bank SMS will be detected.');
+  // Simulate detecting pending SMS for demo
+  simulateSmsDetection();
+}
+
+function simulateSmsDetection(){
+  // Demo SMS samples — real SMS comes from Android native bridge in TWA
+  const demoSms = [
+    'SBI: Rs.450.00 debited from A/c xx1234 on 04-Mar-25 at SWIGGY. Avl Bal:Rs.12,345.00',
+    'HDFC Bank: INR 2,500.00 credited to your account xx5678 by SALARY NEFT. Bal:INR 45,230.00',
+    'Your A/c XX9012 debited by Rs.850 on 04/03/25 for AMAZON. Available balance Rs.8,420',
+  ];
+  smsPending = demoSms.map((body,i)=>{
+    const parsed = parseSmsAmount(body);
+    if(!parsed) return null;
+    const cat = guessSmsCategory(body, parsed.type);
+    const merchant = guessMerchant(body) || cat;
+    return {id:Date.now()+i, body, amount:parsed.amount, type:parsed.type, category:cat, note:merchant, date:new Date().toISOString().split('T')[0]};
+  }).filter(Boolean);
+  renderSmsPending();
+}
+
+function updateSmsUI(){
+  const dot = document.getElementById('smsDot');
+  const txt = document.getElementById('smsStatusText');
+  const btn = document.getElementById('smsToggleBtn');
+  if(!dot) return;
+  if(smsEnabled){
+    dot.classList.add('active');
+    txt.textContent = 'Active — detecting bank SMS';
+    btn.textContent = 'Disable';
+    btn.style.background = '#ff6b6b';
+  } else {
+    dot.classList.remove('active');
+    txt.textContent = 'Tap to enable';
+    btn.textContent = 'Enable';
+    btn.style.background = 'linear-gradient(135deg,#1565c0,#4d96ff)';
+  }
+}
+
+function renderSmsPending(){
+  const listEl = document.getElementById('smsPendingList');
+  const emptyEl = document.getElementById('smsEmptyMsg');
+  if(!smsPending.length){
+    if(listEl) listEl.innerHTML='';
+    if(emptyEl) emptyEl.style.display='block';
+    return;
+  }
+  if(emptyEl) emptyEl.style.display='none';
+  if(listEl) listEl.innerHTML = smsPending.map(s=>`
+    <div class="sms-txn-item">
+      <div style="font-size:1.4rem;">${s.type==='expense'?'💸':'💰'}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:0.82rem;font-weight:700;">${s.type==='expense'?'-':'+'}${fmt(s.amount)} · ${s.category}</div>
+        <div style="font-size:0.65rem;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${s.body.substring(0,60)}...</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <button class="sms-txn-approve" onclick="approveSms(${s.id})">✅ Add</button>
+        <button class="sms-txn-ignore" onclick="ignoreSms(${s.id})">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+async function approveSms(id){
+  const s = smsPending.find(x=>x.id===id);
+  if(!s) return;
+  transactions.push({id:Date.now(),type:s.type,amount:s.amount,category:s.category,date:s.date,note:s.note});
+  await saveData();
+  smsPending = smsPending.filter(x=>x.id!==id);
+  renderSmsPending();
+  renderAll();
+  showToast('✅ Transaction added from SMS!');
+}
+
+function ignoreSms(id){
+  smsPending = smsPending.filter(x=>x.id!==id);
+  renderSmsPending();
+  showToast('Ignored');
+}
+
+async function loadSmsSettings(){
+  try{
+    const r = await dbGet('settings','sms_enabled_'+currentUser.username);
+    smsEnabled = r && r.value==='true';
+    updateSmsUI();
+  }catch{}
+}
+
+// ══════════════════════════════════════════════════════
+// ONBOARDING — shown only on first launch
+// ══════════════════════════════════════════════════════
+const ONBOARD_SLIDES = [
+  {icon:'💰', title:'Welcome to Money Manager Pro', desc:'Your complete personal finance companion. Track every rupee, plan every goal.'},
+  {icon:'📊', title:'Smart Reports & Insights', desc:'Beautiful charts and category-wise breakdown of your income and expenses every month.'},
+  {icon:'📲', title:'SMS Auto-Read', desc:'Enable SMS reading to automatically detect bank transactions. No more manual entry!'},
+  {icon:'💎', title:'Net Worth Tracker', desc:'Know exactly what you own and owe. Track assets, liabilities and your growing net worth.'},
+  {icon:'🔔', title:'Never Miss a Bill', desc:'Set reminders for electricity, rent, EMI and all recurring bills. Mark paid with one tap.'},
+  {icon:'🚀', title:"You're All Set!", desc:'Developed by Ullasan KV, Kerala. Tap Get Started to begin your financial journey!'},
+];
+let onboardIdx = 0;
+
+async function checkOnboarding(){
+  try{
+    const r = await dbGet('settings','onboarded_v1');
+    if(r) return; // already onboarded
+    showOnboarding();
+  }catch{ showOnboarding(); }
+}
+
+function showOnboarding(){
+  if(!document.getElementById('onboardScreen')) return;
+  document.getElementById('onboardScreen').style.display='flex';
+  renderOnboardSlide();
+}
+
+function renderOnboardSlide(){
+  const s = ONBOARD_SLIDES[onboardIdx];
+  document.getElementById('onboardIcon').textContent = s.icon;
+  document.getElementById('onboardTitle').textContent = s.title;
+  document.getElementById('onboardDesc').textContent = s.desc;
+  // Dots
+  document.getElementById('onboardDots').innerHTML = ONBOARD_SLIDES.map((_,i)=>`<div class="onboard-dot ${i===onboardIdx?'active':''}"></div>`).join('');
+  // Button
+  const isLast = onboardIdx === ONBOARD_SLIDES.length-1;
+  document.getElementById('onboardNextBtn').textContent = isLast ? '🚀 Get Started' : 'Next →';
+  document.getElementById('onboardSkip').style.visibility = isLast ? 'hidden' : 'visible';
+}
+
+async function onboardNext(){
+  if(onboardIdx < ONBOARD_SLIDES.length-1){
+    onboardIdx++;
+    renderOnboardSlide();
+  } else {
+    await finishOnboarding();
+  }
+}
+
+async function finishOnboarding(){
+  await dbPut('settings',{key:'onboarded_v1',value:'true'});
+  document.getElementById('onboardScreen').style.display='none';
+}
+
+
+// ══════════════════════════════════════════════════════
+// DAILY REGISTER — Excel-style multi-sheet data entry
+// Data model:
+//   sheets: [{id, name, emoji, columns:[{id,name,type}], rows:[{id, cells:{colId:value}}]}]
+// ══════════════════════════════════════════════════════
+let regSheets = [];       // all sheets
+let regActiveSheetId = null;
+
+// ── Column types ──
+const COL_TYPES = ['Text','Number','Date','Dropdown','Checkbox'];
+
+// ── Load / Save ──
+async function loadRegister(){
+  try{
+    const r = await dbGet('settings','register_'+currentUser.username);
+    regSheets = r ? JSON.parse(r.value) : [];
+    if(!regSheets.length) createDefaultSheets();
+    if(regSheets.length) regActiveSheetId = regSheets[0].id;
+  }catch{ regSheets=[]; createDefaultSheets(); }
+}
+async function saveRegister(){
+  await dbPut('settings',{key:'register_'+currentUser.username, value:JSON.stringify(regSheets)});
+}
+
+function createDefaultSheets(){
+  // Two starter sheets
+  regSheets = [
+    {
+      id: Date.now(),
+      name: 'Daily Log',
+      emoji: '📅',
+      columns:[
+        {id:'c1',name:'Date',type:'Date'},
+        {id:'c2',name:'Description',type:'Text'},
+        {id:'c3',name:'Amount (₹)',type:'Number'},
+        {id:'c4',name:'Remarks',type:'Text'},
+      ],
+      rows:[]
+    },
+    {
+      id: Date.now()+1,
+      name: 'Stock Register',
+      emoji: '📦',
+      columns:[
+        {id:'c1',name:'Date',type:'Date'},
+        {id:'c2',name:'Item',type:'Text'},
+        {id:'c3',name:'Qty In',type:'Number'},
+        {id:'c4',name:'Qty Out',type:'Number'},
+        {id:'c5',name:'Balance',type:'Number'},
+      ],
+      rows:[]
+    }
+  ];
+  regActiveSheetId = regSheets[0].id;
+}
+
+// ── Get active sheet ──
+function getActiveSheet(){
+  return regSheets.find(s=>s.id===regActiveSheetId) || regSheets[0];
+}
+
+// ── Render full Register tab ──
+function renderRegister(){
+  renderRegSheetTabs();
+  renderRegisterGrid();
+}
+
+function renderRegSheetTabs(){
+  const bar = document.getElementById('regSheetsBar');
+  if(!bar) return;
+  bar.innerHTML = regSheets.map(s=>
+    `<button class="reg-sheet-tab ${s.id===regActiveSheetId?'active':''}"
+       onclick="switchRegSheet(${s.id})">${s.emoji} ${s.name}</button>`
+  ).join('') + `<button class="reg-add-sheet" onclick="openAddSheet()" title="New sheet">＋</button>`;
+}
+
+function switchRegSheet(id){
+  regActiveSheetId = id;
+  document.getElementById('regSearch').value = '';
+  renderRegSheetTabs();
+  renderRegisterGrid();
+}
+
+function renderRegisterGrid(){
+  const sheet = getActiveSheet();
+  if(!sheet){ document.getElementById('regGridWrap').innerHTML=''; return; }
+  const search = (document.getElementById('regSearch')?.value||'').toLowerCase();
+  let rows = sheet.rows;
+  if(search) rows = rows.filter(r=>
+    Object.values(r.cells).some(v=>(v+'').toLowerCase().includes(search))
+  );
+
+  const rowCount = document.getElementById('regRowCount');
+  if(rowCount) rowCount.textContent = rows.length+' of '+sheet.rows.length+' row(s)';
+
+  if(!sheet.columns.length){
+    document.getElementById('regGridWrap').innerHTML =
+      `<div class="reg-empty"><div class="reg-empty-icon">📋</div>No columns yet.<br>Tap <strong>⚙️ Columns</strong> to add columns.</div>`;
+    return;
+  }
+  if(!sheet.rows.length && !search){
+    document.getElementById('regGridWrap').innerHTML =
+      `<div class="reg-empty"><div class="reg-empty-icon">📝</div>No rows yet.<br>Tap <strong>+ Add Row</strong> to start entering data.</div>`;
+    return;
+  }
+
+  const thead = `<thead><tr>
+    <th title="Row" style="min-width:50px;">#</th>
+    ${sheet.columns.map((col,ci)=>`<th><div class="reg-col-header">
+      <span>${col.name}</span>
+      <span style="font-size:0.6rem;opacity:0.7;margin-left:3px;">${col.type}</span>
+      <button class="reg-col-ins" onclick="insertRegColumnAfter('${col.id}')" title="Insert column after">＋</button>
+    </div></th>`).join('')}
+    <th style="width:70px;text-align:center;">Action</th>
+  </tr></thead>`;
+
+  const tbody = rows.length ? `<tbody>${rows.map((row,idx)=>`
+    <tr data-rowid="${row.id}">
+      <td style="text-align:center;">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+          <span style="font-size:0.68rem;font-weight:700;color:var(--muted);">${idx+1}</span>
+          <button class="reg-ins-row-btn" onclick="insertRegRowAfter(${row.id})" title="Insert row below">＋</button>
+        </div>
+      </td>
+      ${sheet.columns.map(col=>{
+        const val = row.cells[col.id]||'';
+        const inputType = col.type==='Date'?'date':col.type==='Number'?'number':'text';
+        if(col.type==='Checkbox'){
+          return `<td><input type="checkbox" ${val==='true'?'checked':''} onchange="updateRegCell(${row.id},'${col.id}',this.checked+'')"/></td>`;
+        }
+        return `<td><input class="reg-cell-input" type="${inputType}"
+          value="${val.replace(/"/g,'&quot;')}"
+          onchange="updateRegCell(${row.id},'${col.id}',this.value)"
+          placeholder="${col.type==='Date'?'Pick date':col.type==='Number'?'0':'Enter '+col.name}"/></td>`;
+      }).join('')}
+      <td style="text-align:center;">
+        <button class="reg-row-del" onclick="deleteRegRow(${row.id})" title="Delete row">🗑</button>
+      </td>
+    </tr>`).join('')}</tbody>`
+  : `<tbody><tr><td colspan="${sheet.columns.length+2}" style="text-align:center;padding:20px;color:var(--muted);font-size:0.8rem;">No matching rows found</td></tr></tbody>`;
+
+  document.getElementById('regGridWrap').innerHTML =
+    `<table class="reg-grid">${thead}${tbody}</table>`;
+}
+
+// ── Row operations ──
+async function addRegisterRow(){
+  const sheet = getActiveSheet();
+  if(!sheet){ showToast('⚠️ No sheet selected'); return; }
+  if(!sheet.columns.length){ showToast('⚠️ Add columns first via ⚙️ Columns'); return; }
+  const cells = {};
+  sheet.columns.forEach(col=>{
+    if(col.type==='Date') cells[col.id] = new Date().toISOString().split('T')[0];
+    else cells[col.id] = '';
+  });
+  sheet.rows.push({id:Date.now(), cells});
+  await saveRegister();
+  renderRegisterGrid();
+  // Scroll to bottom of grid
+  const wrap = document.getElementById('regGridWrap');
+  if(wrap) setTimeout(()=>wrap.scrollTop=wrap.scrollHeight,100);
+}
+
+// Insert a blank row immediately AFTER a given row
+async function insertRegRowAfter(afterRowId){
+  const sheet = getActiveSheet();
+  if(!sheet) return;
+  const idx = sheet.rows.findIndex(r=>r.id===afterRowId);
+  if(idx===-1) return;
+  const cells = {};
+  sheet.columns.forEach(col=>{
+    cells[col.id] = col.type==='Date' ? new Date().toISOString().split('T')[0] : '';
+  });
+  const newRow = {id:Date.now(), cells};
+  sheet.rows.splice(idx+1, 0, newRow);
+  await saveRegister();
+  renderRegisterGrid();
+  showToast('✅ Row inserted below row '+(idx+1));
+}
+
+// Insert a blank column immediately AFTER a given column
+function insertRegColumnAfter(afterColId){
+  // Pre-fill the column modal positioned after this col
+  document.getElementById('insertAfterColId').value = afterColId;
+  document.getElementById('newColName').value = '';
+  document.getElementById('newColType').value = 'Text';
+  document.getElementById('insertColTitle').textContent = '➕ Insert Column After';
+  openModal('manageColumnsModal');
+}
+
+async function updateRegCell(rowId, colId, value){
+  const sheet = getActiveSheet();
+  if(!sheet) return;
+  const row = sheet.rows.find(r=>r.id===rowId);
+  if(row){ row.cells[colId]=value; await saveRegister(); }
+}
+
+async function deleteRegRow(rowId){
+  const sheet = getActiveSheet();
+  if(!sheet) return;
+  sheet.rows = sheet.rows.filter(r=>r.id!==rowId);
+  await saveRegister();
+  renderRegisterGrid();
+  showToast('🗑️ Row deleted');
+}
+
+// ── Sheet operations ──
+function openAddSheet(){
+  document.getElementById('regSheetName').value='';
+  document.getElementById('regSheetEmoji').value='📋';
+  openModal('addSheetModal');
+}
+
+async function saveNewSheet(){
+  const name  = document.getElementById('regSheetName').value.trim();
+  const emoji = document.getElementById('regSheetEmoji').value||'📋';
+  if(!name){ showToast('⚠️ Enter a sheet name'); return; }
+  const newSheet = {
+    id: Date.now(),
+    name, emoji,
+    columns:[
+      {id:'col_'+Date.now(),name:'Date',type:'Date'},
+      {id:'col_'+(Date.now()+1),name:'Description',type:'Text'},
+    ],
+    rows:[]
+  };
+  regSheets.push(newSheet);
+  regActiveSheetId = newSheet.id;
+  await saveRegister();
+  closeModal('addSheetModal');
+  renderRegister();
+  showToast('✅ Sheet created: '+name);
+}
+
+async function deleteRegisterSheet(){
+  const sheet = getActiveSheet();
+  if(!sheet) return;
+  if(regSheets.length===1){ showToast('⚠️ Cannot delete the only sheet'); return; }
+  if(!confirm('Delete sheet "'+sheet.name+'" and all its data?')) return;
+  regSheets = regSheets.filter(s=>s.id!==regActiveSheetId);
+  regActiveSheetId = regSheets[0].id;
+  await saveRegister();
+  renderRegister();
+  showToast('🗑️ Sheet deleted');
+}
+
+// ── Column management ──
+function openManageColumns(){
+  renderColumnManager();
+  openModal('manageColumnsModal');
+}
+
+function renderColumnManager(){
+  const sheet = getActiveSheet();
+  if(!sheet) return;
+  const list = document.getElementById('colManagerList');
+  if(!list) return;
+  list.innerHTML = sheet.columns.length
+    ? sheet.columns.map((col,i)=>`
+      <div style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--bg);border-radius:10px;margin-bottom:6px;border:1.5px solid var(--border);">
+        <span style="font-size:0.85rem;flex:1;font-weight:700;">${col.name}</span>
+        <span style="font-size:0.68rem;background:#e8f4ff;color:#1565c0;padding:2px 8px;border-radius:10px;font-weight:700;">${col.type}</span>
+        <button onclick="deleteRegCol('${col.id}')" style="background:#ffebee;border:none;border-radius:6px;color:#e53935;font-size:0.7rem;cursor:pointer;padding:4px 8px;font-weight:700;">✕</button>
+      </div>`).join('')
+    : '<div style="text-align:center;color:var(--muted);padding:16px;font-size:0.82rem;">No columns yet. Add one below!</div>';
+}
+
+async function addRegColumn(){
+  const sheet = getActiveSheet();
+  if(!sheet) return;
+  const name = document.getElementById('newColName').value.trim();
+  const type = document.getElementById('newColType').value;
+  const afterId = document.getElementById('insertAfterColId')?.value||'';
+  if(!name){ showToast('⚠️ Enter column name'); return; }
+  if(sheet.columns.length >= 15){ showToast('⚠️ Maximum 15 columns per sheet'); return; }
+  const colId = 'col_'+Date.now();
+  const newCol = {id:colId, name, type};
+  // Insert after specific column OR append at end
+  const afterIdx = afterId ? sheet.columns.findIndex(c=>c.id===afterId) : -1;
+  if(afterIdx>=0){
+    sheet.columns.splice(afterIdx+1, 0, newCol);
+  } else {
+    sheet.columns.push(newCol);
+  }
+  // Add empty cell to existing rows
+  sheet.rows.forEach(r=>{ r.cells[colId]=''; });
+  // Reset insert-after
+  if(document.getElementById('insertAfterColId')) document.getElementById('insertAfterColId').value='';
+  await saveRegister();
+  document.getElementById('newColName').value='';
+  renderColumnManager();
+  renderRegisterGrid();
+  showToast('✅ Column "'+name+'" added!');
+}
+
+async function deleteRegCol(colId){
+  const sheet = getActiveSheet();
+  if(!sheet) return;
+  if(sheet.columns.length<=1){ showToast('⚠️ Need at least 1 column'); return; }
+  if(!confirm('Delete this column and all its data?')) return;
+  sheet.columns = sheet.columns.filter(c=>c.id!==colId);
+  sheet.rows.forEach(r=>delete r.cells[colId]);
+  await saveRegister();
+  renderColumnManager();
+  renderRegisterGrid();
+  showToast('🗑️ Column deleted');
+}
+
+// ── Export CSV ──
+function exportRegisterCSV(){
+  const sheet = getActiveSheet();
+  if(!sheet||!sheet.rows.length){ showToast('⚠️ No data to export'); return; }
+  const headers = sheet.columns.map(c=>'"'+c.name+'"').join(',');
+  const rows = sheet.rows.map(r=>
+    sheet.columns.map(col=>{
+      const v = (r.cells[col.id]||'').replace(/"/g,'""');
+      return '"'+v+'"';
+    }).join(',')
+  ).join('\r\n');
+  const csv = headers+'\r\n'+rows;
+  const blob = new Blob([csv],{type:'text/csv'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = sheet.name.replace(/\s+/g,'_')+'_'+new Date().toISOString().split('T')[0]+'.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('📤 Exported: '+a.download);
+}
+
+
+// ══════════════════════════════════════════════════════
 // FIREBASE CONFIG — Developer Analytics
 // ⚠️  Replace with YOUR Firebase config from console.firebase.google.com
 // ══════════════════════════════════════════════════════
@@ -2660,7 +3890,7 @@ function saveUserToFirebase(user){
       username:user.username,
       avatar:user.avatar,
       registeredAt:user.registeredAt,
-      appVersion:'1.0.0',
+      appVersion:'1.2.0',
       platform:navigator.userAgent.substring(0,80)
     };
     firebaseDB.ref('users/'+user.username).set(safe);
@@ -3068,6 +4298,145 @@ window.onload=async()=>{
 
       <button onclick="closePrivacyPolicy()" style="width:100%;padding:13px;background:linear-gradient(135deg,#1565c0,#4d96ff);border:none;border-radius:14px;color:#fff;font-weight:700;font-size:0.88rem;cursor:pointer;font-family:var(--font);">I Understand — Close</button>
     </div>
+  </div>
+</div>
+
+
+<!-- ADD BILL REMINDER MODAL -->
+<div class="modal-overlay" id="addReminderModal">
+  <div class="modal-sheet">
+    <h3>🔔 Add Bill Reminder</h3>
+    <div class="form-group">
+      <label>Bill Name</label>
+      <input type="text" id="remName" placeholder="e.g. Electricity Bill, Rent, EMI"/>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="form-group">
+        <label>Amount (₹)</label>
+        <input type="number" id="remAmount" placeholder="0"/>
+      </div>
+      <div class="form-group">
+        <label>Due Day</label>
+        <input type="number" id="remDueDay" placeholder="e.g. 5" min="1" max="31"/>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="form-group">
+        <label>Emoji / Icon</label>
+        <input type="text" id="remEmoji" placeholder="💡" maxlength="2" value="🔔"/>
+      </div>
+      <div class="form-group">
+        <label>Category</label>
+        <select id="remCategory" style="width:100%;padding:12px;border:2px solid var(--border);border-radius:12px;font-size:0.88rem;background:var(--bg);color:var(--text);outline:none;font-family:var(--font);">
+          <option>Bill</option>
+          <option>Electricity</option>
+          <option>Water</option>
+          <option>Gas</option>
+          <option>Internet</option>
+          <option>Mobile</option>
+          <option>Rent</option>
+          <option>EMI</option>
+          <option>Insurance</option>
+          <option>Subscription</option>
+          <option>Other</option>
+        </select>
+      </div>
+    </div>
+    <div style="background:#e8f4ff;border-radius:10px;padding:10px;font-size:0.72rem;color:#1565c0;margin-bottom:12px;">
+      💡 You will be reminded when this bill is due. You can mark it as paid and optionally add it as an expense transaction.
+    </div>
+    <button class="btn-primary" onclick="saveReminder()">+ Add Reminder</button>
+    <button class="modal-close" onclick="closeModal('addReminderModal')">Cancel</button>
+  </div>
+</div>
+
+
+<!-- ONBOARDING SCREEN -->
+<div id="onboardScreen" class="onboard-screen" style="display:none;">
+  <div style="text-align:center;width:100%;">
+    <div style="font-size:0.78rem;font-weight:700;color:#1565c0;letter-spacing:0.05em;">MONEY MANAGER PRO</div>
+  </div>
+  <div class="onboard-slides">
+    <div class="onboard-icon" id="onboardIcon">💰</div>
+    <div class="onboard-title" id="onboardTitle">Welcome</div>
+    <div class="onboard-desc" id="onboardDesc"></div>
+  </div>
+  <div style="width:100%;">
+    <div class="onboard-dots" id="onboardDots" style="justify-content:center;"></div>
+    <button class="onboard-btn" id="onboardNextBtn" onclick="onboardNext()">Next →</button>
+    <div style="text-align:center;margin-top:8px;">
+      <button class="onboard-skip" id="onboardSkip" onclick="finishOnboarding()">Skip</button>
+    </div>
+  </div>
+</div>
+
+<!-- NET WORTH ADD MODAL -->
+<div class="modal-overlay" id="netWorthModal">
+  <div class="modal-sheet">
+    <h3 id="nwFormTitle">✅ Add Asset</h3>
+    <input type="hidden" id="nwFormType" value="asset"/>
+    <div class="form-group"><label>Name</label><input type="text" id="nwFormName" placeholder="e.g. SBI Savings Account, Gold, Car"/></div>
+    <div class="form-group"><label>Amount (₹)</label><input type="number" id="nwFormAmount" placeholder="0"/></div>
+    <div class="nw-form-row">
+      <div class="form-group" style="margin-bottom:0;"><label>Category</label>
+        <select id="nwFormCategory" style="width:100%;padding:11px;border:2px solid var(--border);border-radius:12px;font-size:0.85rem;background:var(--bg);color:var(--text);outline:none;font-family:var(--font);"></select>
+      </div>
+      <div class="form-group" style="margin-bottom:0;"><label>Icon</label>
+        <input type="text" id="nwFormEmoji" placeholder="💰" maxlength="2" style="width:100%;padding:11px;border:2px solid var(--border);border-radius:12px;font-size:1.1rem;text-align:center;background:var(--bg);color:var(--text);outline:none;"/>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="saveNetWorthItem()" style="margin-top:14px;">✅ Save</button>
+    <button class="modal-close" onclick="closeModal('netWorthModal')">Cancel</button>
+  </div>
+</div>
+
+
+<!-- ADD SHEET MODAL -->
+<div class="modal-overlay" id="addSheetModal">
+  <div class="modal-sheet">
+    <h3>📋 New Register Sheet</h3>
+    <div style="display:grid;grid-template-columns:56px 1fr;gap:10px;margin-bottom:14px;">
+      <div class="form-group" style="margin-bottom:0;">
+        <label>Icon</label>
+        <input type="text" id="regSheetEmoji" value="📋" maxlength="2"
+          style="width:100%;padding:12px;border:2px solid var(--border);border-radius:12px;font-size:1.2rem;text-align:center;background:var(--bg);color:var(--text);outline:none;"/>
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label>Sheet Name *</label>
+        <input type="text" id="regSheetName" placeholder="e.g. Sales Register, Attendance"
+          style="width:100%;padding:12px;border:2px solid var(--border);border-radius:12px;font-size:0.88rem;background:var(--bg);color:var(--text);outline:none;font-family:var(--font);"/>
+      </div>
+    </div>
+    <div style="background:#e8f4ff;border-radius:10px;padding:10px;font-size:0.72rem;color:#1565c0;margin-bottom:12px;">
+      💡 A Date and Description column will be added automatically. You can add more columns after creating the sheet.
+    </div>
+    <button class="btn-primary" onclick="saveNewSheet()">✅ Create Sheet</button>
+    <button class="modal-close" onclick="closeModal('addSheetModal')">Cancel</button>
+  </div>
+</div>
+
+<!-- MANAGE COLUMNS MODAL -->
+<div class="modal-overlay" id="manageColumnsModal">
+  <div class="modal-sheet">
+    <h3 id="insertColTitle">⚙️ Manage Columns</h3>
+    <input type="hidden" id="insertAfterColId" value=""/>
+    <div id="colManagerList" style="max-height:220px;overflow-y:auto;margin-bottom:14px;"></div>
+    <div style="background:var(--bg);border-radius:12px;padding:12px;border:2px solid var(--border);">
+      <div style="font-size:0.78rem;font-weight:700;margin-bottom:8px;color:#1565c0;">➕ Add New Column</div>
+      <div style="display:grid;grid-template-columns:1fr 110px;gap:8px;margin-bottom:8px;">
+        <input type="text" id="newColName" placeholder="Column name"
+          style="padding:10px;border:2px solid var(--border);border-radius:10px;font-size:0.85rem;background:var(--surface);color:var(--text);outline:none;font-family:var(--font);"/>
+        <select id="newColType"
+          style="padding:10px;border:2px solid var(--border);border-radius:10px;font-size:0.82rem;background:var(--surface);color:var(--text);outline:none;font-family:var(--font);">
+          <option>Text</option>
+          <option>Number</option>
+          <option>Date</option>
+          <option>Checkbox</option>
+        </select>
+      </div>
+      <button onclick="addRegColumn()" style="width:100%;padding:10px;background:linear-gradient(135deg,#1565c0,#4d96ff);border:none;border-radius:10px;color:#fff;font-weight:700;font-size:0.85rem;cursor:pointer;font-family:var(--font);">+ Add Column</button>
+    </div>
+    <button class="modal-close" onclick="closeModal('manageColumnsModal');renderRegisterGrid();" style="margin-top:10px;">Done</button>
   </div>
 </div>
 
