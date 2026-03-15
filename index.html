@@ -651,7 +651,7 @@ body{background:var(--bg);color:var(--text);display:flex;flex-direction:column;t
       <!-- MINI CHART -->
       <div class="chart-container">
         <div class="chart-title">📊 Last 6 Months Overview</div>
-        <div class="bar-chart" id="miniChart"></div>
+        <canvas id="miniChart" style="width:100%;height:140px;display:block;"></canvas>
         <div class="chart-legend">
           <div class="legend-item"><div class="legend-dot" style="background:#00b894;"></div>Income</div>
           <div class="legend-item"><div class="legend-dot" style="background:#ff6b6b;"></div>Expense</div>
@@ -716,7 +716,7 @@ body{background:var(--bg);color:var(--text);display:flex;flex-direction:column;t
       </div>
       <div class="chart-container" id="catChartSection">
         <div class="chart-title">📂 Expense Breakdown</div>
-        <div id="catBreakdown"></div>
+        <canvas id="catChart" style="width:100%;height:180px;display:block;margin-bottom:10px;"></canvas><div id="catBreakdown"></div>
       </div>
     </div>
 
@@ -1611,6 +1611,7 @@ function saveSettings(){
   setupDailyReminder();
 }
 function toggleDark(){
+  setTimeout(()=>{renderMiniChart();if(document.getElementById('catChart'))renderReport();},50);
   isDark=!isDark;
   document.getElementById('darkModeToggle').checked=isDark;
   document.getElementById('darkToggleBtn').textContent=isDark?'☀️':'🌙';
@@ -1876,29 +1877,91 @@ function renderEmis(){
 // CHARTS
 // ═══════════════════════════════════════
 function renderMiniChart(){
-  const now=new Date();
-  const months=[];
-  for(let i=5;i>=0;i--){
-    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
-    months.push({m:d.getMonth(),y:d.getFullYear(),label:d.toLocaleDateString('en-IN',{month:'short'})});
+  const canvas = document.getElementById('miniChart');
+  if(!canvas || !canvas.getContext) return;
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.offsetWidth || 300;
+  const H = 140;
+  canvas.width  = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, W, H);
+
+  const isDark = document.body.classList.contains('dark');
+  const textColor   = isDark ? '#aaa' : '#666';
+  const gridColor   = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+
+  const now = new Date();
+  const months = [];
+  for(let i=5; i>=0; i--){
+    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+    const txns = getMonthTxns(d.getMonth(), d.getFullYear());
+    const inc = txns.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount, 0);
+    const exp = txns.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount, 0);
+    months.push({label: d.toLocaleDateString('en-IN',{month:'short'}), inc, exp});
   }
-  const maxVal=Math.max(...months.map(m=>{
-    const txns=getMonthTxns(m.m,m.y);
-    return Math.max(txns.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0),txns.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0));
-  }),1);
-  document.getElementById('miniChart').innerHTML=months.map(m=>{
-    const txns=getMonthTxns(m.m,m.y);
-    const inc=txns.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
-    const exp=txns.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
-    const ih=Math.round((inc/maxVal)*80);const eh=Math.round((exp/maxVal)*80);
-    return `<div class="bar-wrap">
-      <div style="display:flex;gap:2px;align-items:flex-end;height:80px;">
-        <div class="bar" style="background:#00b894;height:${ih}px;flex:1;"></div>
-        <div class="bar" style="background:#ff6b6b;height:${eh}px;flex:1;"></div>
-      </div>
-      <div class="bar-label">${m.label}</div>
-    </div>`;
-  }).join('');
+
+  const maxVal = Math.max(...months.map(m=>Math.max(m.inc, m.exp)), 1);
+  const PAD_L=8, PAD_R=8, PAD_T=12, PAD_B=28;
+  const chartH = H - PAD_T - PAD_B;
+  const chartW = W - PAD_L - PAD_R;
+  const slotW  = chartW / months.length;
+  const barW   = Math.max(8, slotW * 0.32);
+
+  // Grid lines
+  [0.25, 0.5, 0.75, 1].forEach(f=>{
+    const y = PAD_T + chartH * (1-f);
+    ctx.beginPath();
+    ctx.moveTo(PAD_L, y); ctx.lineTo(W-PAD_R, y);
+    ctx.strokeStyle = gridColor;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  });
+
+  months.forEach((m, i)=>{
+    const cx = PAD_L + slotW * i + slotW/2;
+    const incH = Math.max(2, (m.inc/maxVal) * chartH);
+    const expH = Math.max(2, (m.exp/maxVal) * chartH);
+
+    // Income bar
+    const incGrad = ctx.createLinearGradient(0, PAD_T+chartH-incH, 0, PAD_T+chartH);
+    incGrad.addColorStop(0, '#00d2a0');
+    incGrad.addColorStop(1, '#00b894');
+    ctx.fillStyle = incGrad;
+    roundRect(ctx, cx - barW - 2, PAD_T+chartH-incH, barW, incH, 3);
+    ctx.fill();
+
+    // Expense bar
+    const expGrad = ctx.createLinearGradient(0, PAD_T+chartH-expH, 0, PAD_T+chartH);
+    expGrad.addColorStop(0, '#ff8a80');
+    expGrad.addColorStop(1, '#ff6b6b');
+    ctx.fillStyle = expGrad;
+    roundRect(ctx, cx + 2, PAD_T+chartH-expH, barW, expH, 3);
+    ctx.fill();
+
+    // Month label
+    ctx.fillStyle = textColor;
+    ctx.font = `600 ${Math.max(9, slotW*0.28)}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(m.label, cx, H - 6);
+  });
+}
+
+function roundRect(ctx, x, y, w, h, r){
+  if(h < r*2) r = h/2;
+  if(w < r*2) r = w/2;
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.lineTo(x+w-r, y);
+  ctx.quadraticCurveTo(x+w, y, x+w, y+r);
+  ctx.lineTo(x+w, y+h);
+  ctx.lineTo(x, y+h);
+  ctx.lineTo(x, y+r);
+  ctx.quadraticCurveTo(x, y, x+r, y);
+  ctx.closePath();
 }
 
 // ═══════════════════════════════════════
@@ -2015,17 +2078,87 @@ function renderReport(){
     }).join(''):`<div style="text-align:center;padding:20px;color:var(--muted);font-size:0.82rem;">No expense data</div>`;
   }
 
-  // Category breakdown chart
+  // Category breakdown — Donut canvas + horizontal bars
   const catMap2={};
   getMonthTxns(reportMonth,reportYear).filter(t=>t.type==='expense').forEach(t=>{catMap2[t.category]=(catMap2[t.category]||0)+t.amount;});
   const sorted2=Object.entries(catMap2).sort((a,b)=>b[1]-a[1]).slice(0,6);
-  const maxVal2=sorted2[0]?.[1]||1;
   const colors=['#ff6b6b','#4d96ff','#ffd93d','#00b894','#cc5de8','#ff922b'];
+
+  // Draw donut chart on canvas
+  const catCanvas = document.getElementById('catChart');
+  if(catCanvas && catCanvas.getContext){
+    const dpr = window.devicePixelRatio||1;
+    const CW = catCanvas.offsetWidth||300;
+    const CH = 180;
+    catCanvas.width  = CW*dpr; catCanvas.height = CH*dpr;
+    catCanvas.style.width=CW+'px'; catCanvas.style.height=CH+'px';
+    const ctx2 = catCanvas.getContext('2d');
+    ctx2.scale(dpr,dpr);
+    ctx2.clearRect(0,0,CW,CH);
+    const isDark = document.body.classList.contains('dark');
+
+    if(sorted2.length){
+      const total = sorted2.reduce((s,[,v])=>s+v,0);
+      const cx=CW/2, cy=CH/2, outerR=Math.min(CW,CH)*0.38, innerR=outerR*0.52;
+      let startAngle = -Math.PI/2;
+
+      sorted2.forEach(([cat,amt],i)=>{
+        const slice = (amt/total)*2*Math.PI;
+        // Segment
+        ctx2.beginPath();
+        ctx2.moveTo(cx,cy);
+        ctx2.arc(cx,cy,outerR,startAngle,startAngle+slice);
+        ctx2.closePath();
+        ctx2.fillStyle = colors[i];
+        ctx2.fill();
+        ctx2.strokeStyle = isDark?'#1a1a2e':'#fff';
+        ctx2.lineWidth = 2;
+        ctx2.stroke();
+        startAngle += slice;
+      });
+
+      // Inner hole
+      ctx2.beginPath();
+      ctx2.arc(cx,cy,innerR,0,Math.PI*2);
+      ctx2.fillStyle = isDark?'#1a1a2e':'#fff';
+      ctx2.fill();
+
+      // Centre total
+      ctx2.fillStyle = isDark?'#fff':'#1a1a2e';
+      ctx2.font = `800 ${Math.round(outerR*0.32)}px sans-serif`;
+      ctx2.textAlign = 'center';
+      ctx2.textBaseline = 'middle';
+      ctx2.fillText(fmt(total), cx, cy-8);
+      ctx2.font = `600 ${Math.round(outerR*0.18)}px sans-serif`;
+      ctx2.fillStyle = isDark?'#aaa':'#888';
+      ctx2.fillText('Total Expense', cx, cy+outerR*0.25);
+    } else {
+      ctx2.fillStyle = isDark?'#555':'#ccc';
+      ctx2.beginPath();
+      ctx2.arc(CW/2,CH/2,Math.min(CW,CH)*0.35,0,Math.PI*2);
+      ctx2.fill();
+      ctx2.fillStyle = isDark?'#aaa':'#888';
+      ctx2.font = '600 13px sans-serif';
+      ctx2.textAlign = 'center';
+      ctx2.textBaseline = 'middle';
+      ctx2.fillText('No expense data', CW/2, CH/2);
+    }
+    catCanvas.style.display = 'block';
+  }
+
+  // Horizontal bar legend below donut
+  const maxVal2=sorted2[0]?.[1]||1;
   document.getElementById('catBreakdown').innerHTML=sorted2.length?sorted2.map(([cat,amt],i)=>{
     const info=EXPENSE_CATS.find(c=>c.name===cat)||{emoji:'📦'};
     const pct=Math.round((amt/maxVal2)*100);
-    return`<div class="cat-item"><div class="cat-row"><span class="cat-name">${info.emoji} ${cat}</span><span class="cat-amount" style="color:${colors[i]}">${fmt(amt)}</span></div><div class="cat-bar"><div class="cat-fill" style="width:${pct}%;background:${colors[i]};"></div></div></div>`;
-  }).join(''):`<div style="text-align:center;padding:20px;color:var(--muted);font-size:0.82rem;">No expense data this month</div>`;
+    return`<div class="cat-item">
+      <div class="cat-row">
+        <span class="cat-name"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${colors[i]};margin-right:5px;"></span>${info.emoji} ${cat}</span>
+        <span class="cat-amount" style="color:${colors[i]}">${fmt(amt)}</span>
+      </div>
+      <div class="cat-bar"><div class="cat-fill" style="width:${pct}%;background:${colors[i]};"></div></div>
+    </div>`;
+  }).join(''):`<div style="text-align:center;padding:10px;color:var(--muted);font-size:0.82rem;">No expense data this month</div>`;
 }
 
 function renderAnnualReport(){
@@ -4170,6 +4303,8 @@ function dismissInstall(){
 window.onload=async()=>{
   history.pushState({tab:'home'},'');
   initFirebase();
+  // Redraw canvas charts on resize
+  window.addEventListener('resize',()=>{ renderMiniChart(); });
   // Show loading splash
   // Show DB loading overlay without destroying login form
   const splash=document.createElement('div');
