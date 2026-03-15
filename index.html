@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Money Manager Pro">
-<meta name="description" content="Best personal finance app for India. Track income, expenses, loans, savings goals, net worth and bank SMS. Works offline. By Ullasan KV, Kerala.">
+<meta name="description" content="Best personal finance app for India. Track income, expenses, loans, savings goals, net worth and bank SMS. Works offline. By Ullasan KV, Poyanad, Kannur.">
 <meta name="application-name" content="Money Manager Pro">
 <title>Money Manager Pro — Personal Finance Tracker</title>
 <link rel="manifest" href="manifest.json">
@@ -535,7 +535,7 @@ body{background:var(--bg);color:var(--text);display:flex;flex-direction:column;t
       <div class="logo-icon">💰</div>
       <h1>Money Manager Pro</h1>
       <p>Professional Finance Tracker</p>
-      <p style="font-size:0.68rem;opacity:0.6;margin-top:4px;">by Ullasan KV · Kerala</p>
+      <p style="font-size:0.68rem;opacity:0.6;margin-top:4px;">by Ullasan KV · Poyanad, Kannur</p>
     </div>
     <div class="tabs-login">
       <button class="tab-btn active" onclick="switchAuthTab('login')">Sign In</button>
@@ -996,7 +996,7 @@ body{background:var(--bg);color:var(--text);display:flex;flex-direction:column;t
           <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.25);">
             <div style="font-size:0.72rem;opacity:0.7;">Developed by</div>
             <div style="font-size:0.92rem;font-weight:800;margin-top:2px;">Ullasan KV</div>
-            <div style="font-size:0.72rem;opacity:0.7;margin-top:2px;">Kerala, India</div>
+            <div style="font-size:0.72rem;opacity:0.7;margin-top:2px;">Poyanad, Kannur, Kerala</div>
           </div>
         </div>
         <div style="background:var(--bg);border-radius:12px;padding:12px;border:2px solid var(--border);font-size:0.78rem;color:var(--muted);line-height:1.6;">
@@ -2303,9 +2303,33 @@ function exportCSV(){
   transactions.forEach(t=>{csv+=`${t.date},${t.type},${t.category},${t.amount},"${t.note||''}"\n`;});
   downloadFile('ullasan-money-'+Date.now()+'.csv',csv,'text/csv');showToast('📊 CSV exported!');
 }
-function exportJSON(){
-  const data=JSON.stringify({user:currentUser.name,exported:new Date().toISOString(),transactions,budgets,goals,emis,recurringTxns,INCOME_CATS,EXPENSE_CATS},null,2);
-  downloadFile('ullasan-backup-'+Date.now()+'.json',data,'application/json');showToast('💾 Backup exported!');
+async function exportJSON(){
+  let remindersData=[],netWorthData=[],registerData=[],dailyLimitVal=0;
+  try{
+    const r1=await dbGet('settings','reminders_'+currentUser.username);
+    if(r1) remindersData=JSON.parse(r1.value);
+    const r2=await dbGet('settings','networth_'+currentUser.username);
+    if(r2) netWorthData=JSON.parse(r2.value);
+    const r3=await dbGet('settings','register_'+currentUser.username);
+    if(r3) registerData=JSON.parse(r3.value);
+    const r4=await dbGet('settings','daily_limit_'+currentUser.username);
+    if(r4) dailyLimitVal=parseFloat(r4.value)||0;
+  }catch(e){console.log('export read error',e);}
+  const data=JSON.stringify({
+    appVersion:'1.2.0',
+    user:currentUser.name,
+    username:currentUser.username,
+    exported:new Date().toISOString(),
+    transactions,budgets,goals,emis,recurringTxns,
+    loans,
+    INCOME_CATS,EXPENSE_CATS,
+    reminders:remindersData,
+    netWorth:netWorthData,
+    register:registerData,
+    dailyLimit:dailyLimitVal
+  },null,2);
+  downloadFile('moneypro-backup-'+currentUser.username+'-'+new Date().toISOString().split('T')[0]+'.json',data,'application/json');
+  showToast('💾 Full backup exported! Loans + Register + Bills included!');
 }
 function exportTxt(){
   const mt=getMonthTxns();
@@ -2319,24 +2343,55 @@ function downloadFile(name,content,type){const a=document.createElement('a');a.h
 function importJSON(){
   const file=document.getElementById('importFile').files[0];if(!file)return;
   const reader=new FileReader();
-  reader.onload=e=>{
+  reader.onload=async e=>{
     try{
       const data=JSON.parse(e.target.result);
-      if(data.transactions){
-        transactions=data.transactions;if(data.budgets)budgets=data.budgets;
-        if(data.goals)goals=data.goals;if(data.emis)emis=data.emis;
-        if(data.recurringTxns)recurringTxns=data.recurringTxns;
-        if(data.INCOME_CATS)INCOME_CATS=data.INCOME_CATS;
-        if(data.EXPENSE_CATS)EXPENSE_CATS=data.EXPENSE_CATS;
-        saveData();saveCategories();renderAll();showToast('✅ Backup restored!');
-      }else showToast('⚠️ Invalid file!');
-    }catch{showToast('⚠️ Failed to read!');}
+      if(!data.transactions && !data.loans && !data.register){
+        showToast('⚠️ Invalid backup file!'); return;
+      }
+      // Core data
+      if(data.transactions) transactions=data.transactions;
+      if(data.budgets)      budgets=data.budgets;
+      if(data.goals)        goals=data.goals;
+      if(data.emis)         emis=data.emis;
+      if(data.recurringTxns) recurringTxns=data.recurringTxns;
+      if(data.INCOME_CATS)  INCOME_CATS=data.INCOME_CATS;
+      if(data.EXPENSE_CATS) EXPENSE_CATS=data.EXPENSE_CATS;
+      // Loans
+      if(data.loans)        loans=data.loans;
+      // Settings-stored modules
+      if(data.reminders)    await dbPut('settings',{key:'reminders_'+currentUser.username,  value:JSON.stringify(data.reminders)});
+      if(data.netWorth)     await dbPut('settings',{key:'networth_'+currentUser.username,    value:JSON.stringify(data.netWorth)});
+      if(data.register)     await dbPut('settings',{key:'register_'+currentUser.username,    value:JSON.stringify(data.register)});
+      if(data.dailyLimit)   await dbPut('settings',{key:'daily_limit_'+currentUser.username, value:String(data.dailyLimit)});
+      // Save and refresh
+      await saveData();
+      await saveCategories();
+      // Reload in-memory copies
+      await loadReminders();
+      await loadNetWorth();
+      await loadRegister();
+      dailyLimit = data.dailyLimit||0;
+      renderAll();
+      showToast('✅ Full backup restored! All data recovered.');
+    }catch(err){
+      console.error('Import error',err);
+      showToast('⚠️ Failed to restore backup!');
+    }
   };reader.readAsText(file);
 }
 async function clearAllData(){
-  if(!confirm('Delete ALL data permanently?'))return;
-  if(!confirm('Last warning! Sure?'))return;
-  transactions=[];budgets={};goals=[];emis=[];recurringTxns=[];loans=[];saveData();renderAll();showToast('🗑️ All cleared!');
+  if(!confirm('Delete ALL data permanently? This includes transactions, loans, register, bills and all other data.'))return;
+  if(!confirm('Last warning! This cannot be undone. Are you sure?'))return;
+  transactions=[];budgets={};goals=[];emis=[];recurringTxns=[];loans=[];
+  reminders=[];netWorthItems=[];regSheets=[];
+  await saveData();
+  await dbPut('settings',{key:'reminders_'+currentUser.username,  value:'[]'});
+  await dbPut('settings',{key:'networth_'+currentUser.username,    value:'[]'});
+  await dbPut('settings',{key:'register_'+currentUser.username,    value:'[]'});
+  await dbPut('settings',{key:'daily_limit_'+currentUser.username, value:'0'});
+  renderAll();
+  showToast('🗑️ All data cleared!');
 }
 
 // ═══════════════════════════════════════
@@ -3475,7 +3530,7 @@ const ONBOARD_SLIDES = [
   {icon:'📲', title:'SMS Auto-Read', desc:'Enable SMS reading to automatically detect bank transactions. No more manual entry!'},
   {icon:'💎', title:'Net Worth Tracker', desc:'Know exactly what you own and owe. Track assets, liabilities and your growing net worth.'},
   {icon:'🔔', title:'Never Miss a Bill', desc:'Set reminders for electricity, rent, EMI and all recurring bills. Mark paid with one tap.'},
-  {icon:'🚀', title:"You're All Set!", desc:'Developed by Ullasan KV, Kerala. Tap Get Started to begin your financial journey!'},
+  {icon:'🚀', title:"You're All Set!", desc:'Developed by Ullasan KV, Poyanad, Kannur. Tap Get Started to begin your financial journey!'},
 ];
 let onboardIdx = 0;
 
@@ -4276,7 +4331,7 @@ window.onload=async()=>{
     </div>
     <div style="font-size:0.78rem;line-height:1.8;color:var(--text);">
       <p style="font-weight:800;margin-bottom:8px;">Money Manager Pro — Privacy Policy</p>
-      <p style="color:var(--muted);margin-bottom:16px;">Last updated: January 2025 &nbsp;|&nbsp; Developed by Ullasan KV, Kerala</p>
+      <p style="color:var(--muted);margin-bottom:16px;">Last updated: January 2025 &nbsp;|&nbsp; Developed by Ullasan KV, Poyanad, Kannur</p>
 
       <p style="font-weight:700;margin-bottom:4px;">1. Information We Collect</p>
       <p style="color:var(--muted);margin-bottom:12px;">When you register, we collect your name, phone number, email address and city. All financial data you enter (transactions, loans, goals) is stored only on your device.</p>
@@ -4294,7 +4349,7 @@ window.onload=async()=>{
       <p style="color:var(--muted);margin-bottom:12px;">We implement reasonable security measures to protect your information. Financial data never leaves your device.</p>
 
       <p style="font-weight:700;margin-bottom:4px;">6. Contact</p>
-      <p style="color:var(--muted);margin-bottom:20px;">Developer: Ullasan KV, Kerala, India<br>GitHub: ullasankv-tech</p>
+      <p style="color:var(--muted);margin-bottom:20px;">Developer: Ullasan KV, Poyanad, Kannur, Kerala<br>GitHub: ullasankv-tech</p>
 
       <button onclick="closePrivacyPolicy()" style="width:100%;padding:13px;background:linear-gradient(135deg,#1565c0,#4d96ff);border:none;border-radius:14px;color:#fff;font-weight:700;font-size:0.88rem;cursor:pointer;font-family:var(--font);">I Understand — Close</button>
     </div>
