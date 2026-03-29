@@ -2606,57 +2606,78 @@ function exportTxt(){
   downloadFile('ullasan-report-'+Date.now()+'.txt',txt,'text/plain');showToast('📄 Text report exported!');
 }
 function downloadFile(name, content, type){
-  // Try Web Share API first (works best on Android/Median)
-  const blob = new Blob([content], {type});
-  const file = new File([blob], name, {type});
-  if(navigator.canShare && navigator.canShare({files:[file]})){
-    navigator.share({files:[file], title:name})
-      .then(()=>showToast('✅ File shared/saved!'))
-      .catch(()=>_downloadFallback(name, content, type));
-    return;
-  }
-  _downloadFallback(name, content, type);
+  // Always show in-app export modal — most reliable for Median/WebView
+  showExportModal(name, content, type);
 }
 
-function _downloadFallback(name, content, type){
+function showExportModal(name, content, type){
+  const existing = document.getElementById('exportModal');
+  if(existing) existing.remove();
+  const isJSON = type.includes('json');
+  const isCSV  = type.includes('csv');
+  const icon   = isJSON ? '💾' : isCSV ? '📊' : '📄';
+  const modal  = document.createElement('div');
+  modal.id = 'exportModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:99999;display:flex;align-items:flex-end;justify-content:center;';
+  modal.innerHTML = `
+    <div style="background:var(--surface);width:100%;max-height:85vh;border-radius:24px 24px 0 0;padding:20px;display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-size:1rem;font-weight:800;">${icon} Export Ready</div>
+          <div style="font-size:0.72rem;color:var(--muted);margin-top:2px;">${name}</div>
+        </div>
+        <button onclick="document.getElementById('exportModal').remove()" style="background:var(--bg);border:2px solid var(--border);border-radius:10px;padding:6px 12px;font-size:0.8rem;cursor:pointer;font-weight:700;">✕ Close</button>
+      </div>
+
+      <!-- Share button — opens Android share sheet -->
+      <button onclick="shareExportFile('${name}',_exportContent,'${type}')"
+        style="padding:14px;background:linear-gradient(135deg,#00b894,#00cec9);border:none;border-radius:14px;color:#fff;font-weight:800;font-size:0.9rem;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:8px;">
+        📤 Share / Save to Phone
+      </button>
+
+      <!-- Copy button -->
+      <button onclick="navigator.clipboard.writeText(_exportContent).then(()=>{showToast('✅ Copied to clipboard!');}).catch(()=>showToast('⚠️ Copy failed — select manually below'))"
+        style="padding:13px;background:linear-gradient(135deg,#1565c0,#4d96ff);border:none;border-radius:14px;color:#fff;font-weight:800;font-size:0.88rem;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:8px;">
+        📋 Copy to Clipboard
+      </button>
+
+      <div style="font-size:0.7rem;color:var(--muted);text-align:center;">After copying — paste into WhatsApp, Gmail, Google Drive or any notes app to save</div>
+
+      <!-- Preview box -->
+      <div style="flex:1;overflow:hidden;border:2px solid var(--border);border-radius:12px;background:var(--bg);">
+        <div style="padding:6px 10px;border-bottom:1px solid var(--border);font-size:0.68rem;font-weight:700;color:var(--muted);">Preview (first 500 chars)</div>
+        <div style="padding:10px;font-size:0.65rem;font-family:monospace;color:var(--text);overflow:auto;max-height:120px;word-break:break-all;">${(content.substring(0,500)+'...').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+      </div>
+    </div>`;
+  // Store content globally for share button access
+  window._exportContent = content;
+  window._exportName = name;
+  window._exportType = type;
+  document.body.appendChild(modal);
+}
+
+async function shareExportFile(name, content, type){
   try{
-    // Blob URL method — works on desktop and most browsers
+    const blob = new Blob([content],{type});
+    const file = new File([blob], name, {type});
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file], title:name, text:'Money Manager Pro — '+name});
+      showToast('✅ Shared successfully!');
+      return;
+    }
+  }catch(e){ console.log('Share failed',e); }
+  // Fallback: try direct download
+  try{
     const blob = new Blob([content],{type});
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
-    a.href = url;
-    a.download = name;
-    a.style.display = 'none';
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(()=>{ document.body.removeChild(a); URL.revokeObjectURL(url); }, 2000);
-  }catch(e){
-    // Last resort: show content in modal so user can copy-paste
-    _showExportModal(name, content);
+    a.href=url; a.download=name; a.style.display='none';
+    document.body.appendChild(a); a.click();
+    setTimeout(()=>{ document.body.removeChild(a); URL.revokeObjectURL(url); },2000);
+    showToast('✅ Downloading to Downloads folder...');
+  }catch(e2){
+    showToast('⚠️ Use Copy button above and paste to save');
   }
-}
-
-function _showExportModal(name, content){
-  // Create a temporary modal showing the content for manual save
-  const existing = document.getElementById('exportContentModal');
-  if(existing) existing.remove();
-  const modal = document.createElement('div');
-  modal.id = 'exportContentModal';
-  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:99999;display:flex;align-items:flex-end;justify-content:center;';
-  modal.innerHTML=`
-    <div style="background:var(--surface);width:100%;max-height:80vh;border-radius:24px 24px 0 0;padding:20px;display:flex;flex-direction:column;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-        <div style="font-size:0.88rem;font-weight:800;">💾 ${name}</div>
-        <button onclick="document.getElementById('exportContentModal').remove()" style="background:none;border:none;font-size:1.3rem;cursor:pointer;">✕</button>
-      </div>
-      <div style="font-size:0.72rem;color:var(--muted);margin-bottom:10px;">Long-press below to select all and copy, then paste into a text editor and save as <strong>${name}</strong></div>
-      <textarea readonly style="flex:1;min-height:200px;padding:10px;border:2px solid var(--border);border-radius:12px;font-size:0.7rem;font-family:monospace;background:var(--bg);color:var(--text);resize:none;">${content.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
-      <button onclick="navigator.clipboard.writeText(document.querySelector('#exportContentModal textarea').value).then(()=>showToast('✅ Copied! Paste into a text file.'))" 
-        style="margin-top:10px;padding:13px;background:linear-gradient(135deg,#1565c0,#4d96ff);border:none;border-radius:14px;color:#fff;font-weight:700;font-size:0.88rem;cursor:pointer;font-family:var(--font);">
-        📋 Copy to Clipboard
-      </button>
-    </div>`;
-  document.body.appendChild(modal);
 }
 
 function exportTxt(){
