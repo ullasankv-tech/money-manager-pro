@@ -811,6 +811,8 @@ body{background:var(--bg);color:var(--text);display:flex;flex-direction:column;t
           <div style="display:flex;gap:6px;">
             <button class="reg-btn reg-btn-outline" onclick="openManageColumns()" title="Manage Columns">⚙️ Columns</button>
             <button class="reg-btn reg-btn-green" onclick="exportRegisterCSV()" title="Export CSV">📤 Export</button>
+            <button class="reg-btn reg-btn-primary" onclick="document.getElementById('regImportFile').click()" title="Import CSV">📥 Import</button>
+            <input type="file" id="regImportFile" accept=".csv" style="display:none;" onchange="importRegisterCSV(this)"/>
           </div>
         </div>
         <div class="reg-sheets-bar" id="regSheetsBar">
@@ -2604,6 +2606,68 @@ function exportTxt(){
   downloadFile('ullasan-report-'+Date.now()+'.txt',txt,'text/plain');showToast('📄 Text report exported!');
 }
 function downloadFile(name, content, type){
+  // Try Web Share API first (works best on Android/Median)
+  const blob = new Blob([content], {type});
+  const file = new File([blob], name, {type});
+  if(navigator.canShare && navigator.canShare({files:[file]})){
+    navigator.share({files:[file], title:name})
+      .then(()=>showToast('✅ File shared/saved!'))
+      .catch(()=>_downloadFallback(name, content, type));
+    return;
+  }
+  _downloadFallback(name, content, type);
+}
+
+function _downloadFallback(name, content, type){
+  try{
+    // Blob URL method — works on desktop and most browsers
+    const blob = new Blob([content],{type});
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(()=>{ document.body.removeChild(a); URL.revokeObjectURL(url); }, 2000);
+  }catch(e){
+    // Last resort: show content in modal so user can copy-paste
+    _showExportModal(name, content);
+  }
+}
+
+function _showExportModal(name, content){
+  // Create a temporary modal showing the content for manual save
+  const existing = document.getElementById('exportContentModal');
+  if(existing) existing.remove();
+  const modal = document.createElement('div');
+  modal.id = 'exportContentModal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:99999;display:flex;align-items:flex-end;justify-content:center;';
+  modal.innerHTML=`
+    <div style="background:var(--surface);width:100%;max-height:80vh;border-radius:24px 24px 0 0;padding:20px;display:flex;flex-direction:column;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div style="font-size:0.88rem;font-weight:800;">💾 ${name}</div>
+        <button onclick="document.getElementById('exportContentModal').remove()" style="background:none;border:none;font-size:1.3rem;cursor:pointer;">✕</button>
+      </div>
+      <div style="font-size:0.72rem;color:var(--muted);margin-bottom:10px;">Long-press below to select all and copy, then paste into a text editor and save as <strong>${name}</strong></div>
+      <textarea readonly style="flex:1;min-height:200px;padding:10px;border:2px solid var(--border);border-radius:12px;font-size:0.7rem;font-family:monospace;background:var(--bg);color:var(--text);resize:none;">${content.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
+      <button onclick="navigator.clipboard.writeText(document.querySelector('#exportContentModal textarea').value).then(()=>showToast('✅ Copied! Paste into a text file.'))" 
+        style="margin-top:10px;padding:13px;background:linear-gradient(135deg,#1565c0,#4d96ff);border:none;border-radius:14px;color:#fff;font-weight:700;font-size:0.88rem;cursor:pointer;font-family:var(--font);">
+        📋 Copy to Clipboard
+      </button>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+function exportTxt(){
+  const mt=getMonthTxns();
+  const inc=mt.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const exp=mt.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  let txt=`ULLASAN'S MONEY MANAGER PRO\nGenerated: ${new Date().toLocaleDateString('en-IN')}\n${'='.repeat(40)}\n\nTHIS MONTH\nIncome: ${fmt(inc)}\nExpense: ${fmt(exp)}\nNet: ${fmt(inc-exp)}\n\nALL TRANSACTIONS\n${'-'.repeat(40)}\n`;
+  transactions.forEach(t=>{txt+=`${t.date} | ${t.type.toUpperCase()} | ${t.category} | ${fmt(t.amount)}${t.note?' | '+t.note:''}\n`;});
+  downloadFile('ullasan-report-'+Date.now()+'.txt',txt,'text/plain');showToast('📄 Text report exported!');
+}
+function downloadFile(name, content, type){
   try{
     // Method 1: Base64 data URI — works on Android WebView & Median
     const b64 = btoa(unescape(encodeURIComponent(content)));
@@ -4198,6 +4262,84 @@ function exportRegisterCSV(){
   showToast('📤 Register exported: '+filename);
 }
 
+
+// ── Import CSV into active Register sheet ──
+async function importRegisterCSV(input){
+  const file = input.files[0];
+  if(!file){ return; }
+  input.value = ''; // reset so same file can be re-imported
+  const sheet = getActiveSheet();
+  if(!sheet){ showToast('⚠️ No sheet selected'); return; }
+
+  const reader = new FileReader();
+  reader.onload = async e => {
+    try{
+      const text = e.target.result;
+      const lines = text.split(/\r?\n/).filter(l=>l.trim());
+      if(lines.length < 2){ showToast('⚠️ CSV is empty or has no data rows'); return; }
+
+      // Parse header row — detect columns
+      const headers = parseCSVLine(lines[0]);
+
+      // Match CSV headers to existing sheet columns by name
+      // If column doesn't exist → create it automatically
+      const colMap = {}; // csvIndex → colId
+      headers.forEach((h, i)=>{
+        const existing = sheet.columns.find(c=>c.name.toLowerCase()===h.toLowerCase());
+        if(existing){
+          colMap[i] = existing.id;
+        } else {
+          // Auto-create column
+          const newId = 'col_imp_'+Date.now()+'_'+i;
+          sheet.columns.push({id:newId, name:h, type:'Text'});
+          colMap[i] = newId;
+        }
+      });
+
+      // Parse data rows
+      let imported = 0;
+      for(let r=1; r<lines.length; r++){
+        const vals = parseCSVLine(lines[r]);
+        if(!vals.length || vals.every(v=>!v.trim())) continue; // skip blank rows
+        const cells = {};
+        headers.forEach((h,i)=>{
+          if(colMap[i]) cells[colMap[i]] = vals[i]||'';
+        });
+        sheet.rows.push({id: Date.now()+r, cells});
+        imported++;
+      }
+
+      await saveRegister();
+      renderRegisterGrid();
+      showToast('✅ Imported '+imported+' rows successfully!');
+    }catch(err){
+      console.error('CSV import error', err);
+      showToast('⚠️ Failed to import CSV. Check file format.');
+    }
+  };
+  reader.readAsText(file);
+}
+
+// Parse a single CSV line handling quoted fields
+function parseCSVLine(line){
+  const result = [];
+  let current  = '';
+  let inQuotes = false;
+  for(let i=0; i<line.length; i++){
+    const ch = line[i];
+    if(ch==='"'){
+      if(inQuotes && line[i+1]==='"'){ current+='"'; i++; } // escaped quote
+      else inQuotes = !inQuotes;
+    } else if(ch===',' && !inQuotes){
+      result.push(current.trim());
+      current = '';
+    } else {
+      current += ch;
+    }
+  }
+  result.push(current.trim());
+  return result;
+}
 
 // ══════════════════════════════════════════════════════
 // FIREBASE CONFIG — Developer Analytics
