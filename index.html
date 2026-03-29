@@ -930,6 +930,99 @@ body{background:var(--bg);color:var(--text);display:flex;flex-direction:column;t
         <button onclick="resetCategories()" style="width:100%;padding:10px;background:none;border:2px solid var(--border);border-radius:10px;color:var(--muted);font-weight:700;font-size:0.8rem;cursor:pointer;margin-top:12px;font-family:var(--font);">🔄 Reset to Default</button>
       </div>
 
+      <!-- ENCRYPTION STATUS -->
+      <div class="panel">
+        <h3>🔐 Data Security</h3>
+        <div style="background:linear-gradient(135deg,#e8f5e9,#f3e5f5);border-radius:14px;padding:14px;border:2px solid #c8e6c9;margin-bottom:12px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="font-size:2rem;">🔐</div>
+            <div>
+              <div style="font-size:0.85rem;font-weight:800;color:#1b5e20;">AES-256-GCM Encryption Active</div>
+              <div style="font-size:0.72rem;color:#388e3c;margin-top:2px;">All your data is encrypted with military-grade AES-256 encryption. Even if someone accesses your phone storage, they cannot read your data without your password.</div>
+            </div>
+          </div>
+          <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+            <div style="background:rgba(255,255,255,0.7);border-radius:8px;padding:7px;text-align:center;">
+              <div style="font-size:0.65rem;color:#555;font-weight:700;">ALGORITHM</div>
+              <div style="font-size:0.75rem;font-weight:800;color:#1b5e20;">AES-256-GCM</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.7);border-radius:8px;padding:7px;text-align:center;">
+              <div style="font-size:0.65rem;color:#555;font-weight:700;">KEY DERIVATION</div>
+              <div style="font-size:0.75rem;font-weight:800;color:#1b5e20;">PBKDF2 / SHA-256</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.7);border-radius:8px;padding:7px;text-align:center;">
+              <div style="font-size:0.65rem;color:#555;font-weight:700;">ITERATIONS</div>
+              <div style="font-size:0.75rem;font-weight:800;color:#1b5e20;">200,000</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.7);border-radius:8px;padding:7px;text-align:center;">
+              <div style="font-size:0.65rem;color:#555;font-weight:700;">KEY STORAGE</div>
+              <div style="font-size:0.75rem;font-weight:800;color:#1b5e20;">Memory Only</div>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:0.72rem;color:var(--muted);line-height:1.6;padding:8px;background:var(--bg);border-radius:8px;">
+          💡 <strong>Tip:</strong> Your encryption key is derived from your password. Never share your password with anyone. If you forget your password, data cannot be recovered.
+        </div>
+      </div>
+
+      <!-- ENCRYPTION STATUS -->
+      <div class="panel">
+        <h3>🔐 Data Encryption</h3>
+        <div style="background:linear-gradient(135deg,#e8f5e9,#f1f8e9);border-radius:14px;padding:14px;border:2px solid #a5d6a7;margin-bottom:12px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <div style="font-size:2rem;">🔐</div>
+            <div>
+              <div style="font-size:0.85rem;font-weight:800;color:#1b5e20;">AES-256-GCM Active</div>
+              <div style="font-size:0.7rem;color:#388e3c;margin-top:2px;">Military-grade encryption is protecting your data</div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+            <div style="background:rgba(255,255,255,0.8);border-radius:8px;padding:7px;text-align:center;">
+              <div style="font-size:0.6rem;color:#555;font-weight:700;">ALGORITHM</div>
+              <div style="font-size:0.72rem;font-weight:800;color:#1b5e20;">AES-256-GCM</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.8);border-radius:8px;padding:7px;text-align:center;">
+              <div style="font-size:0.6rem;color:#555;font-weight:700;">KEY METHOD</div>
+              <div style="font-size:0.72rem;font-weight:800;color:#1b5e20;">PBKDF2 SHA-256</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.8);border-radius:8px;padding:7px;text-align:center;">
+              <div style="font-size:0.6rem;color:#555;font-weight:700;">ITERATIONS</div>
+              <div style="font-size:0.72rem;font-weight:800;color:#1b5e20;">200,000</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.8);border-radius:8px;padding:7px;text-align:center;">
+              <div style="font-size:0.6rem;color:#555;font-weight:700;">KEY LIVES IN</div>
+              <div style="font-size:0.72rem;font-weight:800;color:#1b5e20;">Memory Only</div>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:0.72rem;color:var(--muted);line-height:1.6;padding:8px 10px;background:var(--bg);border-radius:8px;border:1px solid var(--border);">
+          💡 Your data is encrypted using your password. Even if someone extracts your phone storage, they cannot read your financial data. Keep your password safe — data cannot be recovered without it.
+        </div>
+      </div>
+
+      <!-- ENCRYPTION STATUS -->
+      <div class="panel">
+        <h3>🔐 Data Encryption</h3>
+        <div style="background:linear-gradient(135deg,#e8f5e9,#f1f8e9);border-radius:14px;padding:14px;border:2px solid #a5d6a7;margin-bottom:12px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <div style="font-size:2rem;">🔐</div>
+            <div>
+              <div style="font-size:0.85rem;font-weight:800;color:#1b5e20;">AES-256-GCM Active</div>
+              <div style="font-size:0.7rem;color:#388e3c;margin-top:2px;">Military-grade encryption protecting your data</div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+            <div style="background:rgba(255,255,255,0.8);border-radius:8px;padding:7px;text-align:center;"><div style="font-size:0.6rem;color:#555;font-weight:700;">ALGORITHM</div><div style="font-size:0.72rem;font-weight:800;color:#1b5e20;">AES-256-GCM</div></div>
+            <div style="background:rgba(255,255,255,0.8);border-radius:8px;padding:7px;text-align:center;"><div style="font-size:0.6rem;color:#555;font-weight:700;">KEY METHOD</div><div style="font-size:0.72rem;font-weight:800;color:#1b5e20;">PBKDF2 SHA-256</div></div>
+            <div style="background:rgba(255,255,255,0.8);border-radius:8px;padding:7px;text-align:center;"><div style="font-size:0.6rem;color:#555;font-weight:700;">ITERATIONS</div><div style="font-size:0.72rem;font-weight:800;color:#1b5e20;">200,000</div></div>
+            <div style="background:rgba(255,255,255,0.8);border-radius:8px;padding:7px;text-align:center;"><div style="font-size:0.6rem;color:#555;font-weight:700;">KEY LIVES IN</div><div style="font-size:0.72rem;font-weight:800;color:#1b5e20;">Memory Only</div></div>
+          </div>
+        </div>
+        <div style="font-size:0.72rem;color:var(--muted);line-height:1.6;padding:8px 10px;background:var(--bg);border-radius:8px;border:1px solid var(--border);">
+          💡 Your data is encrypted using your password. Even if someone extracts your phone storage, they cannot read your financial data. Keep your password safe — data cannot be recovered without it.
+        </div>
+      </div>
+
       <!-- PIN SETTINGS -->
       <div class="panel">
         <h3>🔒 Security</h3>
@@ -1271,14 +1364,36 @@ const getKey=k=>`${currentUser.username}_${k}`;
 async function saveData(){
   if(!db||!currentUser)return;
   try{
-    // Each array cleared and rewritten as individual records
-    await dbClear('transactions'); await dbPutAll('transactions', transactions.map(t=>({...t,_user:currentUser.username})));
-    await dbClear('loans');        await dbPutAll('loans',        loans.map(l=>({...l,_user:currentUser.username})));
-    await dbClear('goals');        await dbPutAll('goals',        goals.map(g=>({...g,_user:currentUser.username})));
-    await dbClear('emis');         await dbPutAll('emis',         emis.map(e=>({...e,_user:currentUser.username})));
-    await dbClear('recurring');    await dbPutAll('recurring',    recurringTxns.map(r=>({...r,_user:currentUser.username})));
-    // Budgets stored as single settings record
-    await dbPut('settings',{key:getKey('budgets'),value:JSON.stringify(budgets)});
+    const u=currentUser.username;
+    // Encrypt each record individually before storing
+    const encTxns = await Promise.all(transactions.map(async t=>{
+      const enc=await encryptData(JSON.stringify({...t,_user:u}));
+      return{id:t.id,_user:u,_enc:enc};
+    }));
+    const encLoans = await Promise.all(loans.map(async l=>{
+      const enc=await encryptData(JSON.stringify({...l,_user:u}));
+      return{id:l.id,_user:u,_enc:enc};
+    }));
+    const encGoals = await Promise.all(goals.map(async g=>{
+      const enc=await encryptData(JSON.stringify({...g,_user:u}));
+      return{id:g.id,_user:u,_enc:enc};
+    }));
+    const encEmis = await Promise.all(emis.map(async e=>{
+      const enc=await encryptData(JSON.stringify({...e,_user:u}));
+      return{id:e.id,_user:u,_enc:enc};
+    }));
+    const encRecur = await Promise.all(recurringTxns.map(async r=>{
+      const enc=await encryptData(JSON.stringify({...r,_user:u}));
+      return{id:r.id,_user:u,_enc:enc};
+    }));
+    await dbClear('transactions'); await dbPutAll('transactions', encTxns);
+    await dbClear('loans');        await dbPutAll('loans',        encLoans);
+    await dbClear('goals');        await dbPutAll('goals',        encGoals);
+    await dbClear('emis');         await dbPutAll('emis',         encEmis);
+    await dbClear('recurring');    await dbPutAll('recurring',    encRecur);
+    // Encrypt budgets
+    const encBudgets=await encryptData(JSON.stringify(budgets));
+    await dbPut('settings',{key:getKey('budgets'),value:encBudgets});
   }catch(err){console.error('saveData error:',err);}
 }
 
@@ -1286,19 +1401,32 @@ async function saveData(){
 async function loadData(){
   if(!db||!currentUser)return;
   try{
-    const uname=currentUser.username;
-    const allTxns   =await dbGetAll('transactions');
-    const allLoans  =await dbGetAll('loans');
-    const allGoals  =await dbGetAll('goals');
-    const allEmis   =await dbGetAll('emis');
-    const allRecur  =await dbGetAll('recurring');
-    const budgetRec =await dbGet('settings',getKey('budgets'));
-    transactions =allTxns.filter(r=>r._user===uname);
-    loans        =allLoans.filter(r=>r._user===uname);
-    goals        =allGoals.filter(r=>r._user===uname);
-    emis         =allEmis.filter(r=>r._user===uname);
-    recurringTxns=allRecur.filter(r=>r._user===uname);
-    budgets      =budgetRec?JSON.parse(budgetRec.value):{};
+    const u=currentUser.username;
+    // Helper: decrypt a store's records for current user
+    async function decryptStore(storeName){
+      const all=await dbGetAll(storeName);
+      const mine=all.filter(r=>r._user===u);
+      return Promise.all(mine.map(async r=>{
+        if(r._enc){
+          try{ return JSON.parse(await decryptData(r._enc)); }
+          catch{ return r; } // legacy unencrypted record
+        }
+        return r;
+      }));
+    }
+    transactions  = await decryptStore('transactions');
+    loans         = await decryptStore('loans');
+    goals         = await decryptStore('goals');
+    emis          = await decryptStore('emis');
+    recurringTxns = await decryptStore('recurring');
+    // Budgets
+    const budgetRec=await dbGet('settings',getKey('budgets'));
+    if(budgetRec){
+      try{
+        const dec=await decryptData(budgetRec.value);
+        budgets=JSON.parse(dec);
+      }catch{ budgets={}; }
+    } else budgets={};
   }catch(err){console.error('loadData error:',err);}
 }
 
@@ -1490,6 +1618,8 @@ async function doRegister(){
   const newUser={name,phone,email,city,username:user,password:pass,avatar:selAvatar,registeredAt:new Date().toISOString()};
   users[user]=newUser;
   await saveUsers(users);
+  // 🔐 Pre-init crypto key so first save is encrypted
+  await initCryptoKey(user, pass);
   // ── Save to Firebase (developer analytics) ──
   saveUserToFirebase(newUser);
   switchAuthTab('login');
@@ -1507,6 +1637,7 @@ async function doLogin(){
   if(pin&&pinEnabled){showPinScreen('check');}else{showApp();}
 }
 function doLogout(){
+  clearCryptoKey(); // 🔐 Wipe encryption key from memory
   currentUser=null;transactions=[];budgets={};goals=[];emis=[];recurringTxns=[];
   clearSession();
   document.getElementById('appScreen').classList.remove('active');
@@ -2472,7 +2603,35 @@ function exportTxt(){
   transactions.forEach(t=>{txt+=`${t.date} | ${t.type.toUpperCase()} | ${t.category} | ${fmt(t.amount)}${t.note?' | '+t.note:''}\n`;});
   downloadFile('ullasan-report-'+Date.now()+'.txt',txt,'text/plain');showToast('📄 Text report exported!');
 }
-function downloadFile(name,content,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=name;a.click();}
+function downloadFile(name, content, type){
+  try{
+    // Method 1: Base64 data URI — works on Android WebView & Median
+    const b64 = btoa(unescape(encodeURIComponent(content)));
+    const dataUri = 'data:'+type+';base64,'+b64;
+    const a = document.createElement('a');
+    a.href = dataUri;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }catch(e){
+    try{
+      // Method 2: Blob fallback for desktop browsers
+      const blob = new Blob([content],{type});
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url; a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(()=>URL.revokeObjectURL(url), 1000);
+    }catch(e2){
+      // Method 3: Open in new tab as last resort
+      const blob = new Blob([content],{type:'text/plain'});
+      window.open(URL.createObjectURL(blob),'_blank');
+    }
+  }
+}
 function importJSON(){
   const file=document.getElementById('importFile').files[0];if(!file)return;
   const reader=new FileReader();
@@ -3249,7 +3408,8 @@ async function loadReminders(){
   }catch{reminders=[];}
 }
 async function saveReminders(){
-  await dbPut('settings',{key:'reminders_'+currentUser.username,value:JSON.stringify(reminders)});
+  const enc=await encryptData(JSON.stringify(reminders));
+  await dbPut('settings',{key:'reminders_'+currentUser.username,value:enc});
 }
 
 function renderReminders(){
@@ -3395,11 +3555,13 @@ let netWorthItems = []; // [{id,type:'asset'|'liability',name,amount,category,em
 async function loadNetWorth(){
   try{
     const r = await dbGet('settings','networth_'+currentUser.username);
-    netWorthItems = r ? JSON.parse(r.value) : [];
+    if(r){ const dec=await decryptData(r.value); netWorthItems=JSON.parse(dec); }
+    else netWorthItems=[];
   }catch{ netWorthItems=[]; }
 }
 async function saveNetWorth(){
-  await dbPut('settings',{key:'networth_'+currentUser.username, value:JSON.stringify(netWorthItems)});
+  const enc=await encryptData(JSON.stringify(netWorthItems));
+  await dbPut('settings',{key:'networth_'+currentUser.username,value:enc});
 }
 
 function renderNetWorth(){
@@ -3724,13 +3886,15 @@ const COL_TYPES = ['Text','Number','Date','Dropdown','Checkbox'];
 async function loadRegister(){
   try{
     const r = await dbGet('settings','register_'+currentUser.username);
-    regSheets = r ? JSON.parse(r.value) : [];
+    if(r){ const dec=await decryptData(r.value); regSheets=JSON.parse(dec); }
+    else regSheets=[];
     if(!regSheets.length) createDefaultSheets();
     if(regSheets.length) regActiveSheetId = regSheets[0].id;
   }catch{ regSheets=[]; createDefaultSheets(); }
 }
 async function saveRegister(){
-  await dbPut('settings',{key:'register_'+currentUser.username, value:JSON.stringify(regSheets)});
+  const enc=await encryptData(JSON.stringify(regSheets));
+  await dbPut('settings',{key:'register_'+currentUser.username,value:enc});
 }
 
 function createDefaultSheets(){
@@ -4029,14 +4193,9 @@ function exportRegisterCSV(){
     }).join(',')
   ).join('\r\n');
   const csv = headers+'\r\n'+rows;
-  const blob = new Blob([csv],{type:'text/csv'});
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href = url;
-  a.download = sheet.name.replace(/\s+/g,'_')+'_'+new Date().toISOString().split('T')[0]+'.csv';
-  a.click();
-  URL.revokeObjectURL(url);
-  showToast('📤 Exported: '+a.download);
+  const filename = sheet.name.replace(/\s+/g,'_')+'_'+new Date().toISOString().split('T')[0]+'.csv';
+  downloadFile(filename, csv, 'text/csv');
+  showToast('📤 Register exported: '+filename);
 }
 
 

@@ -1,0 +1,91 @@
+╔══════════════════════════════════════════════════════════════════╗
+║           FIREBASE SETUP — See Your Users' Details               ║
+║           Developer: Ullasan KV  |  GitHub: ullasankv-tech        ║
+╚══════════════════════════════════════════════════════════════════╝
+
+This guide helps you set up Firebase so that every time someone
+installs and registers your app, their details appear in your
+Firebase dashboard — NAME, PHONE, EMAIL, CITY automatically!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP A: CREATE FIREBASE PROJECT (Free)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Go to https://console.firebase.google.com
+2. Sign in with your Google account
+3. Click "Create a project"
+4. Project name: money-manager-pro
+5. Google Analytics: Enable it (free)
+6. Click "Create project" → wait 30 seconds
+7. Click "Continue"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP B: SET UP REALTIME DATABASE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. In left menu click "Build" → "Realtime Database"
+2. Click "Create Database"
+3. Location: Choose "asia-southeast1 (Singapore)"
+   (closest to India, fastest speed)
+4. Security rules: Select "Start in TEST mode"
+   (we'll secure it properly later)
+5. Click "Enable"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP C: GET YOUR CONFIG KEYS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Click the gear icon ⚙️ → "Project settings"
+2. Scroll down to "Your apps" section
+3. Click the </> (Web) icon
+4. App nickname: money-manager-web
+5. Click "Register app"
+6. You will see a config block like this:
+
+   const firebaseConfig = {
+     apiKey: "AIzaSy...",
+     authDomain: "money-manager-pro-xxxx.firebaseapp.com",
+     databaseURL: "https://money-manager-pro-xxxx-default-rtdb...",
+     projectId: "money-manager-pro-xxxx",
+     storageBucket: "money-manager-pro-xxxx.appspot.com",
+     messagingSenderId: "123456789",
+     appId: "1:123456789:web:abc123"
+   };
+
+7. COPY this entire block — you need it for Step D!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP D: UPDATE index.html WITH YOUR FIREBASE CONFIG
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Open index.html in a text editor (Notepad on Windows)
+2. Find this section (search for FIREBASE_CONFIG):
+
+   const FIREBASE_CONFIG = {
+     apiKey:            "YOUR_API_KEY",
+     authDomain:        "YOUR_PROJECT.firebaseapp.com",
+     databaseURL:       "https://YOUR_PROJECT-default-rtdb...",
+     ...
+   };
+
+3. Replace the values with YOUR actual values from Step C
+4. Save the file
+5. Re-upload index.html to GitHub (overwrite old file)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP E: VIEW YOUR USERS (after people register)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Go to https://console.firebase.google.com
+2. Select your project
+3. Click "Realtime Database" in left menu
+4. You will see all registered users listed like:
+   users/
+     username1/
+       name: "Ravi Kumar"
+       phone: "9876543210"
+       email: "ravi@email.com"
+       city: "Mumbai"
+       registeredAt: "2025-01-15T10:30:00Z"
+     username2/
+       ...
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+NOTE: App works perfectly even WITHOUT Firebase setup.
+Firebase is only needed to see user registrations centrally.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
