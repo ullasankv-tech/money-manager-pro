@@ -811,8 +811,8 @@ body{background:var(--bg);color:var(--text);display:flex;flex-direction:column;t
           <div style="display:flex;gap:6px;">
             <button class="reg-btn reg-btn-outline" onclick="openManageColumns()" title="Manage Columns">⚙️ Columns</button>
             <button class="reg-btn reg-btn-green" onclick="exportRegisterCSV()" title="Export CSV">📤 Export</button>
-            <button class="reg-btn reg-btn-primary" onclick="document.getElementById('regImportFile').click()" title="Import CSV">📥 Import</button>
-            <input type="file" id="regImportFile" accept=".csv" style="display:none;" onchange="importRegisterCSV(this)"/>
+            <button class="reg-btn reg-btn-primary" onclick="openImportOptions()" title="Import CSV">📥 Import</button>
+            <input type="file" id="regImportFile" accept=".csv,text/csv,text/plain,text/*" style="display:none;" onchange="importRegisterCSV(this)"/>
           </div>
         </div>
         <div class="reg-sheets-bar" id="regSheetsBar">
@@ -4285,60 +4285,132 @@ function exportRegisterCSV(){
 
 
 // ── Import CSV into active Register sheet ──
-async function importRegisterCSV(input){
-  const file = input.files[0];
-  if(!file){ return; }
-  input.value = ''; // reset so same file can be re-imported
+// ── Open Import Options modal ──
+function openImportOptions(){
   const sheet = getActiveSheet();
-  if(!sheet){ showToast('⚠️ No sheet selected'); return; }
+  if(!sheet){ showToast('⚠️ No active sheet!'); return; }
+  // Show modal with clear instructions
+  const existing = document.getElementById('importOptionsModal');
+  if(existing) existing.remove();
+  const modal = document.createElement('div');
+  modal.id = 'importOptionsModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:99999;display:flex;align-items:flex-end;justify-content:center;';
+  modal.innerHTML = `
+    <div style="background:var(--surface);width:100%;border-radius:24px 24px 0 0;padding:20px;display:flex;flex-direction:column;gap:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div style="font-size:0.95rem;font-weight:800;">📥 Import CSV into Register</div>
+        <button onclick="document.getElementById('importOptionsModal').remove()" style="background:var(--bg);border:2px solid var(--border);border-radius:10px;padding:5px 12px;cursor:pointer;font-weight:700;">✕</button>
+      </div>
+      <div style="background:#e8f4ff;border-radius:12px;padding:12px;font-size:0.78rem;color:#1565c0;line-height:1.7;">
+        <strong>📋 How to import:</strong><br>
+        1. Your CSV must have a <strong>header row</strong> as first line<br>
+        2. Column names should match your sheet columns<br>
+        3. Select your CSV file below<br>
+        4. Data will be added to sheet: <strong>${sheet.name}</strong>
+      </div>
+      <div style="background:#fff3e0;border-radius:12px;padding:10px;font-size:0.72rem;color:#e65100;">
+        ⚠️ <strong>Tip for Android:</strong> If file picker doesn't show CSV files, tap the ≡ menu → select "Show all files" or browse to Downloads folder
+      </div>
+      <button onclick="document.getElementById('importOptionsModal').remove();setTimeout(()=>document.getElementById('regImportFile').click(),200)"
+        style="padding:14px;background:linear-gradient(135deg,#1565c0,#4d96ff);border:none;border-radius:14px;color:#fff;font-weight:800;font-size:0.9rem;cursor:pointer;font-family:var(--font);">
+        📁 Browse & Select CSV File
+      </button>
+      <div style="text-align:center;font-size:0.7rem;color:var(--muted);">Or paste CSV text directly:</div>
+      <textarea id="csvPasteArea" placeholder="Paste your CSV content here...&#10;Example:&#10;Date,Description,Amount&#10;2025-01-01,Groceries,500" 
+        style="padding:10px;border:2px solid var(--border);border-radius:12px;font-size:0.72rem;font-family:monospace;background:var(--bg);color:var(--text);resize:none;height:100px;outline:none;"></textarea>
+      <button onclick="importFromPastedCSV()"
+        style="padding:13px;background:linear-gradient(135deg,#00b894,#55efc4);border:none;border-radius:14px;color:#fff;font-weight:800;font-size:0.88rem;cursor:pointer;font-family:var(--font);">
+        ✅ Import Pasted CSV
+      </button>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+// Import from pasted CSV text in modal
+async function importFromPastedCSV(){
+  const text = document.getElementById('csvPasteArea')?.value?.trim();
+  if(!text){ showToast('⚠️ Please paste CSV content first'); return; }
+  document.getElementById('importOptionsModal')?.remove();
+  await processCSVImport(text);
+}
+
+// Called when file is selected via file picker
+async function importRegisterCSV(input){
+  if(!input.files || !input.files[0]){
+    showToast('⚠️ No file selected');
+    return;
+  }
+  const file = input.files[0];
+  showToast('⏳ Reading file...');
 
   const reader = new FileReader();
+  reader.onerror = ()=>{ showToast('⚠️ Could not read file. Try pasting CSV text instead.'); };
   reader.onload = async e => {
-    try{
-      const text = e.target.result;
-      const lines = text.split(/\r?\n/).filter(l=>l.trim());
-      if(lines.length < 2){ showToast('⚠️ CSV is empty or has no data rows'); return; }
-
-      // Parse header row — detect columns
-      const headers = parseCSVLine(lines[0]);
-
-      // Match CSV headers to existing sheet columns by name
-      // If column doesn't exist → create it automatically
-      const colMap = {}; // csvIndex → colId
-      headers.forEach((h, i)=>{
-        const existing = sheet.columns.find(c=>c.name.toLowerCase()===h.toLowerCase());
-        if(existing){
-          colMap[i] = existing.id;
-        } else {
-          // Auto-create column
-          const newId = 'col_imp_'+Date.now()+'_'+i;
-          sheet.columns.push({id:newId, name:h, type:'Text'});
-          colMap[i] = newId;
-        }
-      });
-
-      // Parse data rows
-      let imported = 0;
-      for(let r=1; r<lines.length; r++){
-        const vals = parseCSVLine(lines[r]);
-        if(!vals.length || vals.every(v=>!v.trim())) continue; // skip blank rows
-        const cells = {};
-        headers.forEach((h,i)=>{
-          if(colMap[i]) cells[colMap[i]] = vals[i]||'';
-        });
-        sheet.rows.push({id: Date.now()+r, cells});
-        imported++;
-      }
-
-      await saveRegister();
-      renderRegisterGrid();
-      showToast('✅ Imported '+imported+' rows successfully!');
-    }catch(err){
-      console.error('CSV import error', err);
-      showToast('⚠️ Failed to import CSV. Check file format.');
+    const text = e.target.result;
+    input.value = ''; // reset after reading
+    if(!text || !text.trim()){
+      showToast('⚠️ File is empty');
+      return;
     }
+    await processCSVImport(text);
   };
-  reader.readAsText(file);
+
+  // Try reading with UTF-8 first, then latin1 as fallback
+  try{
+    reader.readAsText(file, 'UTF-8');
+  }catch(e){
+    try{ reader.readAsText(file, 'ISO-8859-1'); }
+    catch(e2){ showToast('⚠️ Cannot read file. Try pasting CSV text.'); }
+  }
+}
+
+// Core CSV processing — shared by file picker and paste methods
+async function processCSVImport(text){
+  const sheet = getActiveSheet();
+  if(!sheet){ showToast('⚠️ No active sheet'); return; }
+  try{
+    // Normalise line endings
+    const lines = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n').filter(l=>l.trim());
+    if(lines.length < 1){ showToast('⚠️ CSV has no content'); return; }
+    if(lines.length < 2){ showToast('⚠️ CSV needs at least a header row and one data row'); return; }
+
+    const headers = parseCSVLine(lines[0]);
+    if(!headers.length){ showToast('⚠️ Could not read headers from CSV'); return; }
+
+    // Map or create columns
+    const colMap = {};
+    headers.forEach((h,i)=>{
+      const hClean = h.replace(/^"|"$/g,'').trim();
+      const existing = sheet.columns.find(c=>c.name.toLowerCase()===hClean.toLowerCase());
+      if(existing){
+        colMap[i] = existing.id;
+      } else if(hClean){
+        const newId = 'col_imp_'+Date.now()+'_'+i;
+        sheet.columns.push({id:newId, name:hClean, type:'Text'});
+        colMap[i] = newId;
+      }
+    });
+
+    // Import rows
+    let imported=0, skipped=0;
+    for(let r=1; r<lines.length; r++){
+      const vals = parseCSVLine(lines[r]);
+      if(!vals.length || vals.every(v=>!v.replace(/^"|"$/g,'').trim())){ skipped++; continue; }
+      const cells = {};
+      headers.forEach((_,i)=>{
+        if(colMap[i]) cells[colMap[i]] = (vals[i]||'').replace(/^"|"$/g,'').trim();
+      });
+      sheet.rows.push({id:Date.now()+r+Math.random(), cells});
+      imported++;
+    }
+
+    await saveRegister();
+    renderRegisterGrid();
+    showToast('✅ Imported '+imported+' rows!'+(skipped?' ('+skipped+' blank rows skipped)':''));
+  }catch(err){
+    console.error('CSV import error',err);
+    showToast('⚠️ Import failed: '+err.message);
+  }
 }
 
 // Parse a single CSV line handling quoted fields
