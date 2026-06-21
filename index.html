@@ -1059,6 +1059,9 @@ body{background:var(--bg);color:var(--text);display:flex;flex-direction:column;t
         <h3>📤 Export & Backup</h3>
         <button class="export-btn" onclick="exportCSV()">📊 Export as CSV (Excel)</button>
         <button class="export-btn" onclick="exportJSON()">💾 Export as JSON (Backup)</button>
+        <div style="font-size:0.7rem;color:var(--muted);margin-top:6px;padding:8px;background:var(--bg);border-radius:8px;border:1px solid var(--border);">
+          📱 <strong>About file storage:</strong> Your data is securely saved inside this app on your device using encrypted IndexedDB storage. On Android, this is managed automatically by the system — you cannot set a custom folder path. Use <em>Export as JSON</em> to backup your data to Google Drive, WhatsApp or any folder of your choice.
+        </div>
         <button class="export-btn" onclick="exportTxt()">📄 Export as Text Report</button>
         <div style="margin-top:12px;padding-top:12px;border-top:2px solid var(--border);">
           <div style="font-size:0.88rem;font-weight:700;margin-bottom:10px;">📥 Restore</div>
@@ -1362,6 +1365,62 @@ async function dbPutAll(store,items){
 // ── User prefix for multi-user isolation ──
 const getKey=k=>`${currentUser.username}_${k}`;
 
+// ══════════════════════════════════════════════════════
+// 🔐 ENCRYPTION ENGINE — AES-256-GCM via Web Crypto API
+// Device-stored random key — persists across sessions
+// ══════════════════════════════════════════════════════
+let _cryptoKey = null;
+
+async function encryptData(plainText){
+  if(!_cryptoKey) return plainText;
+  try{
+    const enc = new TextEncoder();
+    const iv  = crypto.getRandomValues(new Uint8Array(12));
+    const encrypted = await crypto.subtle.encrypt({name:'AES-GCM',iv}, _cryptoKey, enc.encode(plainText));
+    const combined  = new Uint8Array(iv.byteLength + encrypted.byteLength);
+    combined.set(iv,0);
+    combined.set(new Uint8Array(encrypted), iv.byteLength);
+    return btoa(String.fromCharCode(...combined));
+  }catch(e){ return plainText; }
+}
+
+async function decryptData(cipherText){
+  if(!_cryptoKey) return cipherText;
+  try{
+    const combined  = Uint8Array.from(atob(cipherText), c=>c.charCodeAt(0));
+    const iv        = combined.slice(0,12);
+    const data      = combined.slice(12);
+    const decrypted = await crypto.subtle.decrypt({name:'AES-GCM',iv}, _cryptoKey, data);
+    return new TextDecoder().decode(decrypted);
+  }catch(e){ return cipherText; }
+}
+
+async function initCryptoKey(username){
+  try{
+    if(!db){ _cryptoKey=null; return; }
+    const stored = await dbGet('settings','__devkey_'+username);
+    if(stored && stored.value){
+      const raw = Uint8Array.from(atob(stored.value), c=>c.charCodeAt(0));
+      _cryptoKey = await crypto.subtle.importKey('raw', raw, {name:'AES-GCM'}, true, ['encrypt','decrypt']);
+      return;
+    }
+    // Generate new key for this user
+    const key      = await crypto.subtle.generateKey({name:'AES-GCM',length:256}, true, ['encrypt','decrypt']);
+    const exported = await crypto.subtle.exportKey('raw', key);
+    const b64      = btoa(String.fromCharCode(...new Uint8Array(exported)));
+    await dbPut('settings',{key:'__devkey_'+username, value:b64});
+    _cryptoKey = key;
+    console.log('🔐 New encryption key generated');
+  }catch(e){
+    console.error('Crypto init error:',e);
+    _cryptoKey = null;
+  }
+}
+
+function clearCryptoKey(){ _cryptoKey = null; }
+
+
+
 // ── saveData: persist all in-memory arrays to IndexedDB ──
 async function saveData(){
   if(!db||!currentUser)return;
@@ -1536,7 +1595,7 @@ async function migrateFromLocalStorage(){
   }catch(err){console.error('Migration error:',err);}
 }
 function showToast(msg,dur=1800){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);}
-function showError(msg){const e=document.getElementById('authError');e.textContent=msg;e.style.display='block';setTimeout(()=>e.style.display='none',3000);}
+function showError(msg, isSuccess=false){const e=document.getElementById('authError');e.textContent=msg;e.style.display='block';setTimeout(()=>e.style.display='none',3000);}
 function openModal(id){
   document.getElementById(id).classList.add('open');
   history.pushState({modal:id},'');
@@ -1617,16 +1676,39 @@ async function doRegister(){
   if(!/^[^@]+@[^@]+\.[^@]+$/.test(email)) return showError('Enter a valid email address.');
   const users=await getUsers();
   if(users[user]) return showError('Username already taken!');
-  const newUser={name,phone,email,city,username:user,password:pass,avatar:selAvatar,registeredAt:new Date().toISOString()};
-  users[user]=newUser;
-  await saveUsers(users);
-  // 🔐 Pre-init crypto key so first save is encrypted
-  await initCryptoKey(user, pass);
-  // ── Save to Firebase (developer analytics) ──
-  saveUserToFirebase(newUser);
-  switchAuthTab('login');
-  document.getElementById('loginUser').value=user;
-  showToast('✅ Account created! Sign in now.');
+
+  // Show loading state on button
+  const btn = document.querySelector('#registerForm .btn-primary');
+  const oldTxt = btn ? btn.textContent : '';
+  if(btn){ btn.textContent='⏳ Creating Account...'; btn.disabled=true; }
+
+  try{
+    const newUser={name,phone,email,city,username:user,password:pass,avatar:selAvatar,registeredAt:new Date().toISOString()};
+    users[user]=newUser;
+    await saveUsers(users);
+    // 🔐 Init device key for new user
+    await initCryptoKey(user);
+    // Save to Firebase
+    saveUserToFirebase(newUser);
+    // Clear all form fields
+    ['regName','regPhone','regEmail','regCity','regUser','regPass'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el) el.value='';
+    });
+    // Go to login tab
+    switchAuthTab('login');
+    document.getElementById('loginUser').value=user;
+    document.getElementById('loginPass').value='';
+    // Show success toast
+    showToast('🎉 Account created successfully! Please sign in.');
+    // Show success message on login form
+    showError('✅ Account created for '+name+'! Enter your password to sign in.', true);
+  }catch(e){
+    console.error('Register error',e);
+    showError('Registration failed. Please try again.');
+  }finally{
+    if(btn){ btn.textContent=oldTxt; btn.disabled=false; }
+  }
 }
 async function doLogin(){
   const user=document.getElementById('loginUser').value.trim().toLowerCase();
@@ -1634,19 +1716,31 @@ async function doLogin(){
   if(!user||!pass)return showError('Enter username & password.');
   const users=await getUsers();
   if(!users[user]||users[user].password!==pass)return showError('Invalid credentials.');
-  currentUser=users[user];await loadData();await loadCategories();const{pin,pinEnabled}=await loadSettings();
+  currentUser=users[user];
+  // 🔐 Load device key BEFORE loading data
+  await initCryptoKey(user);
+  await loadData();await loadCategories();const{pin,pinEnabled}=await loadSettings();
   setSession(user);
   if(pin&&pinEnabled){showPinScreen('check');}else{showApp();}
 }
 function doLogout(){
-  clearCryptoKey(); // 🔐 Wipe encryption key from memory
-  currentUser=null;transactions=[];budgets={};goals=[];emis=[];recurringTxns=[];
+  clearCryptoKey();
+  currentUser=null;
+  transactions=[];budgets={};goals=[];emis=[];recurringTxns=[];loans=[];
+  reminders=[];netWorthItems=[];regSheets=[];
   clearSession();
-  document.getElementById('appScreen').classList.remove('active');
-  document.getElementById('pinScreen').classList.remove('active');
-  document.getElementById('pinScreen').style.display='none';
-  document.getElementById('loginScreen').classList.add('active');
-  showToast('👋 Logged out!');
+  try{
+    document.getElementById('appScreen').classList.remove('active');
+    document.getElementById('pinScreen').classList.remove('active');
+    document.getElementById('pinScreen').style.display='none';
+    document.getElementById('loginScreen').classList.add('active');
+    // Reset login form
+    document.getElementById('loginUser').value='';
+    document.getElementById('loginPass').value='';
+    document.getElementById('authError').style.display='none';
+    switchAuthTab('login');
+  }catch(e){ location.reload(); }
+  showToast('👋 Logged out successfully!');
 }
 function showApp(){
   document.getElementById('pinScreen').classList.remove('active');
@@ -2570,32 +2664,42 @@ function exportCSV(){
   downloadFile('ullasan-money-'+Date.now()+'.csv',csv,'text/csv');showToast('📊 CSV exported!');
 }
 async function exportJSON(){
-  let remindersData=[],netWorthData=[],registerData=[],dailyLimitVal=0;
   try{
-    const r1=await dbGet('settings','reminders_'+currentUser.username);
-    if(r1) remindersData=JSON.parse(r1.value);
-    const r2=await dbGet('settings','networth_'+currentUser.username);
-    if(r2) netWorthData=JSON.parse(r2.value);
-    const r3=await dbGet('settings','register_'+currentUser.username);
-    if(r3) registerData=JSON.parse(r3.value);
-    const r4=await dbGet('settings','daily_limit_'+currentUser.username);
-    if(r4) dailyLimitVal=parseFloat(r4.value)||0;
-  }catch(e){console.log('export read error',e);}
-  const data=JSON.stringify({
-    appVersion:'1.2.0',
-    user:currentUser.name,
-    username:currentUser.username,
-    exported:new Date().toISOString(),
-    transactions,budgets,goals,emis,recurringTxns,
-    loans,
-    INCOME_CATS,EXPENSE_CATS,
-    reminders:remindersData,
-    netWorth:netWorthData,
-    register:registerData,
-    dailyLimit:dailyLimitVal
-  },null,2);
-  downloadFile('moneypro-backup-'+currentUser.username+'-'+new Date().toISOString().split('T')[0]+'.json',data,'application/json');
-  showToast('💾 Full backup exported! Loans + Register + Bills included!');
+    // Decrypt and read all settings-stored modules
+    let remindersData=[],netWorthData=[],registerData=[],dailyLimitVal=0;
+    try{
+      const r1=await dbGet('settings','reminders_'+currentUser.username);
+      if(r1){ const dec=await decryptData(r1.value); remindersData=JSON.parse(dec); }
+      const r2=await dbGet('settings','networth_'+currentUser.username);
+      if(r2){ const dec=await decryptData(r2.value); netWorthData=JSON.parse(dec); }
+      const r3=await dbGet('settings','register_'+currentUser.username);
+      if(r3){ const dec=await decryptData(r3.value); registerData=JSON.parse(dec); }
+      const r4=await dbGet('settings','daily_limit_'+currentUser.username);
+      if(r4) dailyLimitVal=parseFloat(r4.value)||0;
+    }catch(e){ console.log('export module read',e); }
+
+    const backupObj={
+      appVersion:'1.2.0',
+      appName:'Money Manager Pro',
+      developer:'Ullasan KV, Poyanad, Kannur, Kerala',
+      user:currentUser.name,
+      username:currentUser.username,
+      exported:new Date().toISOString(),
+      transactions,budgets,goals,emis,recurringTxns,loans,
+      INCOME_CATS,EXPENSE_CATS,
+      reminders:remindersData,
+      netWorth:netWorthData,
+      register:registerData,
+      dailyLimit:dailyLimitVal
+    };
+    const jsonStr = JSON.stringify(backupObj, null, 2);
+    const fname   = 'moneypro-backup-'+currentUser.username+'-'+new Date().toISOString().split('T')[0]+'.json';
+    // Show in-app export modal — reliable on all platforms
+    showExportModal(fname, jsonStr, 'application/json');
+  }catch(e){
+    console.error('Export error',e);
+    showToast('⚠️ Export failed: '+e.message);
+  }
 }
 function exportTxt(){
   const mt=getMonthTxns();
@@ -4722,6 +4826,8 @@ window.onload=async()=>{
   const users=await getUsers();
   if(saved&&users[saved]){
     currentUser=users[saved];
+    // 🔐 Load encryption key BEFORE loading any data
+    await initCryptoKey(saved);
     await loadData();
     await loadCategories();
     const{pin,pinEnabled}=await loadSettings();
