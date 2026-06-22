@@ -493,6 +493,36 @@ body{background:var(--bg);color:var(--text);display:flex;flex-direction:column;t
 .reg-col-ins{background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);border-radius:4px;color:#fff;font-size:0.65rem;cursor:pointer;padding:1px 5px;line-height:1.4;margin-left:auto;flex-shrink:0;}
 .reg-col-ins:hover{background:rgba(255,255,255,0.4);}
 
+
+/* ── LOAN LEDGER STATEMENT ── */
+.ledger-person-tabs{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px;margin-bottom:12px;}
+.ledger-person-tab{padding:7px 14px;border-radius:20px;font-size:0.75rem;font-weight:700;cursor:pointer;border:2px solid var(--border);background:var(--bg);color:var(--muted);white-space:nowrap;font-family:var(--font);transition:all 0.2s;}
+.ledger-person-tab.active{background:#1565c0;color:#fff;border-color:#1565c0;}
+.ledger-summary-strip{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;}
+.ledger-summary-box{border-radius:12px;padding:10px;text-align:center;}
+.ledger-summary-label{font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;opacity:0.75;margin-bottom:3px;}
+.ledger-summary-val{font-size:0.92rem;font-weight:900;}
+.ledger-table{width:100%;border-collapse:collapse;font-size:0.75rem;}
+.ledger-table th{background:linear-gradient(135deg,#1a1a2e,#1565c0);color:#fff;padding:9px 8px;text-align:left;font-weight:700;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.03em;}
+.ledger-table th:last-child,.ledger-table td:last-child{text-align:right;}
+.ledger-table th:nth-child(3),.ledger-table td:nth-child(3){text-align:right;}
+.ledger-table th:nth-child(4),.ledger-table td:nth-child(4){text-align:right;}
+.ledger-table td{padding:9px 8px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.ledger-table tr:last-child td{border-bottom:none;}
+.ledger-table tr.debit-row td{background:#fff8f8;}
+.ledger-table tr.credit-row td{background:#f6fff9;}
+.ledger-table tr.debit-row:hover td{background:#ffebee;}
+.ledger-table tr.credit-row:hover td{background:#e8f5e9;}
+.ledger-debit{color:#e53935;font-weight:800;}
+.ledger-credit{color:#2e7d32;font-weight:800;}
+.ledger-balance-pos{color:#1565c0;font-weight:800;}
+.ledger-balance-neg{color:#e65100;font-weight:800;}
+.ledger-type-badge{font-size:0.6rem;font-weight:800;padding:2px 7px;border-radius:10px;display:inline-block;}
+.ledger-type-debit{background:#ffebee;color:#c62828;}
+.ledger-type-credit{background:#e8f5e9;color:#1b5e20;}
+.ledger-empty{text-align:center;padding:30px 20px;color:var(--muted);font-size:0.82rem;}
+.ledger-print-btn{float:right;padding:5px 12px;background:var(--bg);border:2px solid var(--border);border-radius:8px;font-size:0.7rem;font-weight:700;cursor:pointer;font-family:var(--font);color:var(--text);}
+
 </style>
 </head>
 <body>
@@ -794,10 +824,42 @@ body{background:var(--bg);color:var(--text);display:flex;flex-direction:column;t
         <div id="loanTakenCards"></div>
       </div>
 
-      <!-- LOAN REPORT -->
+      <!-- LOAN REPORT SUMMARY -->
       <div class="panel" style="margin-top:4px;">
         <h3>📊 Loan Report</h3>
         <div id="loanReport"></div>
+      </div>
+
+      <!-- LENDER-WISE LEDGER STATEMENT -->
+      <div class="panel" style="margin-top:12px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <h3 style="margin-bottom:0;">📒 Ledger Statement</h3>
+          <button class="ledger-print-btn" onclick="exportLedgerStatement()">📤 Export</button>
+        </div>
+        <!-- Person selector tabs -->
+        <div class="ledger-person-tabs" id="ledgerPersonTabs"></div>
+        <!-- Summary strip -->
+        <div class="ledger-summary-strip" id="ledgerSummary"></div>
+        <!-- Ledger table -->
+        <div style="overflow-x:auto;border-radius:12px;border:2px solid var(--border);">
+          <table class="ledger-table" id="ledgerTable">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Particulars</th>
+                <th>Debit (Dr)</th>
+                <th>Credit (Cr)</th>
+                <th>Balance</th>
+              </tr>
+            </thead>
+            <tbody id="ledgerBody">
+              <tr><td colspan="5" class="ledger-empty">Select a person above to view statement</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="margin-top:8px;font-size:0.65rem;color:var(--muted);line-height:1.6;">
+          📌 <strong>Dr (Debit)</strong> = Amount loaned out / Amount you owe &nbsp;|&nbsp; <strong>Cr (Credit)</strong> = Repayment received / Amount you repaid
+        </div>
       </div>
     </div>
 
@@ -3421,6 +3483,198 @@ function renderLoanReport(){
     <div class="report-row"><span class="report-label">🧡 Pending to Pay</span><span class="report-val" style="color:#ff922b;">${fmt(pendingTaken)}</span></div>
     <div class="report-row"><span class="report-label">✅ Closed Loans</span><span class="report-val" style="color:#00b894;">${closedLoans.length}</span></div>
     <div class="report-row"><span class="report-label">📈 Interest Earned</span><span class="report-val" style="color:#00b894;">${fmt(totalInterest)}</span></div>`;
+  // Also render ledger
+  renderLedgerStatement();
+}
+
+
+// ══════════════════════════════════════════════════════
+// LEDGER STATEMENT — Per-person Debit/Credit statement
+// ══════════════════════════════════════════════════════
+let ledgerActivePerson = null;
+
+function renderLedgerStatement(){
+  // Collect all unique persons from loans
+  const persons = [...new Set(loans.map(l=>l.person))].sort();
+  const tabsEl  = document.getElementById('ledgerPersonTabs');
+  if(!tabsEl) return;
+
+  if(!persons.length){
+    tabsEl.innerHTML = '<div style="font-size:0.78rem;color:var(--muted);">No loans added yet.</div>';
+    document.getElementById('ledgerSummary').innerHTML = '';
+    document.getElementById('ledgerBody').innerHTML = '<tr><td colspan="5" class="ledger-empty">Add loans to see ledger statement</td></tr>';
+    return;
+  }
+
+  // Auto-select first person
+  if(!ledgerActivePerson || !persons.includes(ledgerActivePerson)){
+    ledgerActivePerson = persons[0];
+  }
+
+  // Render person tabs
+  tabsEl.innerHTML = persons.map(p=>
+    `<button class="ledger-person-tab ${p===ledgerActivePerson?'active':''}"
+      onclick="selectLedgerPerson('${p.replace(/'/g,"\'")}')">
+      ${p}
+    </button>`
+  ).join('');
+
+  renderLedgerForPerson(ledgerActivePerson);
+}
+
+function selectLedgerPerson(person){
+  ledgerActivePerson = person;
+  renderLedgerStatement();
+}
+
+function renderLedgerForPerson(person){
+  // Get all loans for this person
+  const personLoans = loans.filter(l=>l.person===person);
+  if(!personLoans.length){
+    document.getElementById('ledgerSummary').innerHTML = '';
+    document.getElementById('ledgerBody').innerHTML = `<tr><td colspan="5" class="ledger-empty">No loans found for ${person}</td></tr>`;
+    return;
+  }
+
+  // Build ledger entries — combine loan disbursements + repayments into one timeline
+  const entries = [];
+
+  personLoans.forEach(loan=>{
+    const isGiven = loan.type === 'given';
+    // Opening entry — loan given or taken
+    entries.push({
+      date    : loan.date,
+      details : isGiven
+        ? `Loan given to ${person}${loan.note?' — '+loan.note:''}`
+        : `Loan taken from ${person}${loan.note?' — '+loan.note:''}`,
+      debit   : isGiven ? loan.amount : 0,   // Dr: money going out (lent) or liability (borrowed)
+      credit  : isGiven ? 0 : loan.amount,   // Cr: money received when borrowed
+      loanId  : loan.id,
+      type    : 'loan',
+      loanType: loan.type,
+      rate    : loan.rate,
+    });
+    // Repayment entries
+    (loan.repayments||[]).forEach(r=>{
+      entries.push({
+        date    : r.date,
+        details : isGiven
+          ? `Repayment received from ${person}${r.note?' — '+r.note:''}`
+          : `Repayment made to ${person}${r.note?' — '+r.note:''}`,
+        debit   : isGiven ? 0 : r.amount,    // Dr: paying back = outflow
+        credit  : isGiven ? r.amount : 0,    // Cr: receiving back = inflow
+        loanId  : loan.id,
+        type    : 'repayment',
+        loanType: loan.type,
+      });
+    });
+    // Interest entry if applicable
+    if(loan.rate>0){
+      const interest = calcInterest(loan);
+      if(interest>0){
+        entries.push({
+          date    : loan.date,
+          details : `Interest @ ${loan.rate}% p.a.`,
+          debit   : isGiven ? 0 : interest,
+          credit  : isGiven ? interest : 0,
+          loanId  : loan.id,
+          type    : 'interest',
+          loanType: loan.type,
+        });
+      }
+    }
+  });
+
+  // Sort all entries by date ascending
+  entries.sort((a,b)=>new Date(a.date)-new Date(b.date));
+
+  // Calculate running balance
+  let balance = 0;
+  const rows  = entries.map((e,i)=>{
+    balance += e.debit - e.credit;
+    return {...e, balance, idx:i+1};
+  });
+
+  // ── Summary strip ──
+  const totalDebit  = rows.reduce((s,r)=>s+r.debit, 0);
+  const totalCredit = rows.reduce((s,r)=>s+r.credit, 0);
+  const netBalance  = totalDebit - totalCredit;
+  const isOwed      = netBalance > 0;
+
+  document.getElementById('ledgerSummary').innerHTML = `
+    <div class="ledger-summary-box" style="background:#fff3e0;">
+      <div class="ledger-summary-label" style="color:#e65100;">Total Dr</div>
+      <div class="ledger-summary-val ledger-debit">${fmt(totalDebit)}</div>
+    </div>
+    <div class="ledger-summary-box" style="background:#e8f5e9;">
+      <div class="ledger-summary-label" style="color:#2e7d32;">Total Cr</div>
+      <div class="ledger-summary-val ledger-credit">${fmt(totalCredit)}</div>
+    </div>
+    <div class="ledger-summary-box" style="background:${isOwed?'#e8f4ff':'#fff8e1'};">
+      <div class="ledger-summary-label" style="color:${isOwed?'#1565c0':'#f57f17'};">${isOwed?'To Receive':'To Pay'}</div>
+      <div class="ledger-summary-val" style="color:${isOwed?'#1565c0':'#e65100'};">${fmt(Math.abs(netBalance))}</div>
+    </div>`;
+
+  // ── Table body ──
+  if(!rows.length){
+    document.getElementById('ledgerBody').innerHTML =
+      `<tr><td colspan="5" class="ledger-empty">No transactions found</td></tr>`;
+    return;
+  }
+
+  document.getElementById('ledgerBody').innerHTML = rows.map(r=>{
+    const isDebitRow  = r.debit > 0 && r.credit === 0;
+    const rowClass    = isDebitRow ? 'debit-row' : 'credit-row';
+    const balClass    = r.balance > 0 ? 'ledger-balance-pos' : r.balance < 0 ? 'ledger-balance-neg' : '';
+    const balSuffix   = r.balance > 0 ? ' Dr' : r.balance < 0 ? ' Cr' : '';
+    const badge       = isDebitRow
+      ? '<span class="ledger-type-badge ledger-type-debit">Dr</span>'
+      : '<span class="ledger-type-badge ledger-type-credit">Cr</span>';
+    const dateStr     = new Date(r.date).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'2-digit'});
+    return `<tr class="${rowClass}">
+      <td style="white-space:nowrap;">${dateStr}</td>
+      <td>${badge} ${r.details}</td>
+      <td class="${r.debit?'ledger-debit':''}">${r.debit?fmt(r.debit):'-'}</td>
+      <td class="${r.credit?'ledger-credit':''}">${r.credit?fmt(r.credit):'-'}</td>
+      <td class="${balClass}" style="white-space:nowrap;">${fmt(Math.abs(r.balance))}${balSuffix}</td>
+    </tr>`;
+  }).join('') + `
+    <tr style="background:var(--bg);">
+      <td colspan="2" style="font-weight:800;font-size:0.78rem;padding:10px 8px;">CLOSING BALANCE</td>
+      <td class="ledger-debit" style="font-weight:800;">${fmt(totalDebit)}</td>
+      <td class="ledger-credit" style="font-weight:800;">${fmt(totalCredit)}</td>
+      <td class="${isOwed?'ledger-balance-pos':'ledger-balance-neg'}" style="font-weight:900;">
+        ${fmt(Math.abs(netBalance))} ${isOwed?'Dr':'Cr'}
+      </td>
+    </tr>`;
+}
+
+// Export ledger as CSV
+function exportLedgerStatement(){
+  if(!ledgerActivePerson){ showToast('⚠️ Select a person first'); return; }
+  const personLoans = loans.filter(l=>l.person===ledgerActivePerson);
+  if(!personLoans.length){ showToast('⚠️ No data to export'); return; }
+
+  const entries = [];
+  personLoans.forEach(loan=>{
+    const isGiven = loan.type==='given';
+    entries.push({date:loan.date, details:isGiven?'Loan Given':'Loan Taken', debit:isGiven?loan.amount:0, credit:isGiven?0:loan.amount});
+    (loan.repayments||[]).forEach(r=>{
+      entries.push({date:r.date, details:isGiven?'Repayment Received':'Repayment Made', debit:isGiven?0:r.amount, credit:isGiven?r.amount:0});
+    });
+  });
+  entries.sort((a,b)=>new Date(a.date)-new Date(b.date));
+
+  let balance=0;
+  const lines = ['"Date","Particulars","Debit (Dr)","Credit (Cr)","Balance"'];
+  entries.forEach(e=>{
+    balance += e.debit - e.credit;
+    lines.push(`"${e.date}","${e.details}","${e.debit||''}","${e.credit||''}","${Math.abs(balance)} ${balance>0?'Dr':'Cr'}"`);
+  });
+  const csv = lines.join('
+');
+  const fname = 'ledger-'+ledgerActivePerson.replace(/\s+/g,'_')+'-'+new Date().toISOString().split('T')[0]+'.csv';
+  downloadFile(fname, csv, 'text/csv');
 }
 
 // ═══════════════════════════════════════
