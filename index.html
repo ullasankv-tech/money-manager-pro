@@ -1152,7 +1152,7 @@ body{background:var(--bg);color:var(--text);display:flex;flex-direction:column;t
         <div style="background:linear-gradient(135deg,#1565c0,#4d96ff);border-radius:16px;padding:20px;color:#fff;text-align:center;margin-bottom:12px;">
           <div style="font-size:2.5rem;margin-bottom:8px;">💰</div>
           <div style="font-size:1rem;font-weight:800;letter-spacing:0.02em;">Money Manager Pro</div>
-          <div style="font-size:0.72rem;opacity:0.85;margin-top:4px;">Version 1.2.0 · Play Store Edition</div>
+          <div style="font-size:0.72rem;opacity:0.85;margin-top:4px;">Version 1.8.0 · Play Store Edition</div>
           <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.25);">
             <div style="font-size:0.72rem;opacity:0.7;">Developed by</div>
             <div style="font-size:0.92rem;font-weight:800;margin-top:2px;">Ullasan KV</div>
@@ -1348,7 +1348,7 @@ const fmt=n=>'₹'+Math.abs(n).toLocaleString('en-IN',{minimumFractionDigits:2,m
 // INDEXEDDB — Proper database storage
 // Tables: transactions | loans | goals | emis | recurring | settings | users | categories
 // ═══════════════════════════════════════
-const DB_NAME='MoneyManagerProDB', DB_VERSION=1;
+const DB_NAME='MoneyManagerProDB', DB_VERSION=3; // bumped to 3 to force clean upgrade
 let db=null;
 
 function initDB(){
@@ -1356,6 +1356,7 @@ function initDB(){
     const req=indexedDB.open(DB_NAME,DB_VERSION);
     req.onupgradeneeded=e=>{
       const d=e.target.result;
+      // Close any existing connections to avoid blocking
       const stores=[
         {name:'transactions',key:'id'},
         {name:'loans',key:'id'},
@@ -1367,12 +1368,31 @@ function initDB(){
         {name:'categories',key:'key'},
       ];
       stores.forEach(s=>{
-        if(!d.objectStoreNames.contains(s.name))
-          d.createObjectStore(s.name,{keyPath:s.key});
+        try{
+          if(!d.objectStoreNames.contains(s.name))
+            d.createObjectStore(s.name,{keyPath:s.key});
+        }catch(err){ console.warn('Store create:',s.name,err); }
       });
     };
-    req.onsuccess=e=>{db=e.target.result;resolve(db);};
-    req.onerror=e=>{console.error('DB Error:',e.target.error);reject(e.target.error);};
+    req.onsuccess=e=>{
+      db=e.target.result;
+      // Handle version change blocking
+      db.onversionchange=()=>{ db.close(); location.reload(); };
+      resolve(db);
+    };
+    req.onerror=e=>{
+      console.error('DB Error:',e.target.error);
+      // Try to recover — delete and recreate
+      try{
+        const del=indexedDB.deleteDatabase(DB_NAME);
+        del.onsuccess=()=>{ location.reload(); };
+      }catch(err){}
+      reject(e.target.error);
+    };
+    req.onblocked=()=>{
+      console.warn('DB blocked — closing old connections');
+      if(db) db.close();
+    };
   });
 }
 
@@ -1721,9 +1741,15 @@ AVATARS.forEach(a=>{
   ap.appendChild(d);
 });
 function switchAuthTab(tab){
-  document.getElementById('loginForm').style.display=tab==='login'?'block':'none';
-  document.getElementById('registerForm').style.display=tab==='register'?'block':'none';
-  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',(tab==='login'&&i===0)||(tab==='register'&&i===1)));
+  const lf=document.getElementById('loginForm');
+  const rf=document.getElementById('registerForm');
+  if(lf) lf.style.display=tab==='login'?'block':'none';
+  if(rf) rf.style.display=tab==='register'?'block':'none';
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>{
+    b.classList.toggle('active',(tab==='login'&&i===0)||(tab==='register'&&i===1));
+  });
+  const errEl=document.getElementById('authError');
+  if(errEl) errEl.style.display='none';
 }
 async function doRegister(){
   const name    = document.getElementById('regName').value.trim();
@@ -2741,7 +2767,7 @@ async function exportJSON(){
     }catch(e){ console.log('export module read',e); }
 
     const backupObj={
-      appVersion:'1.2.0',
+      appVersion:'1.8.0',
       appName:'Money Manager Pro',
       developer:'Ullasan KV, Poyanad, Kannur, Kerala',
       user:currentUser.name,
@@ -4830,7 +4856,7 @@ function saveUserToFirebase(user){
       username:user.username,
       avatar:user.avatar,
       registeredAt:user.registeredAt,
-      appVersion:'1.2.0',
+      appVersion:'1.8.0',
       platform:navigator.userAgent.substring(0,80)
     };
     firebaseDB.ref('users/'+user.username).set(safe);
@@ -5055,42 +5081,71 @@ function dismissInstall(){
 window.onload=async()=>{
   history.pushState({tab:'home'},'');
   initFirebase();
-  // Redraw canvas charts on resize
   window.addEventListener('resize',()=>{ renderMiniChart(); });
-  // Show loading splash
-  // Show DB loading overlay without destroying login form
+
+  // ── Show loading splash ──
   const splash=document.createElement('div');
   splash.id='dbSplash';
-  splash.style.cssText='position:fixed;inset:0;background:#fff;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;';
-  splash.innerHTML=`<div style="font-size:3rem;">🏦</div>
-    <div style="font-size:1rem;font-weight:700;color:#1565c0;">Money Manager Pro</div>
-    <div style="font-size:0.82rem;color:#888;">Starting database...</div>
-    <div style="width:48px;height:48px;border:4px solid #e3f2fd;border-top:4px solid #1565c0;border-radius:50%;animation:spin 0.8s linear infinite;"></div>`;
+  splash.style.cssText='position:fixed;inset:0;background:#fff;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;font-family:var(--font);';
+  splash.innerHTML=`
+    <div style="font-size:3.5rem;">💰</div>
+    <div style="font-size:1rem;font-weight:800;color:#1565c0;">Money Manager Pro</div>
+    <div id="splashStatus" style="font-size:0.78rem;color:#888;">Starting...</div>
+    <div style="width:44px;height:44px;border:4px solid #e3f2fd;border-top:4px solid #1565c0;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+    <div style="font-size:0.65rem;color:#bbb;margin-top:8px;">by Ullasan KV · Poyanad, Kannur</div>`;
   document.body.appendChild(splash);
+
+  const setSplashStatus = t => {
+    const el=document.getElementById('splashStatus');
+    if(el) el.textContent=t;
+  };
+
+  // ── Init DB ──
   try{
+    setSplashStatus('Opening database...');
     await initDB();
+    setSplashStatus('Checking data...');
     await migrateFromLocalStorage();
   }catch(err){
-    console.error('DB init failed:',err);
+    console.error('DB init error:',err);
+    setSplashStatus('Database error — restarting...');
+    setTimeout(()=>location.reload(), 2000);
+    return;
   }
-  // Remove loading splash
+
+  // ── Remove splash ──
   const sp=document.getElementById('dbSplash');
-  if(sp)sp.remove();
-  const saved=getSession();
-  const users=await getUsers();
-  if(saved&&users[saved]){
-    currentUser=users[saved];
-    // 🔐 Load encryption key BEFORE loading any data
-    await initCryptoKey(saved);
-    await loadData();
-    await loadCategories();
-    const{pin,pinEnabled}=await loadSettings();
-    if(pin&&pinEnabled){showPinScreen('check');}else{showApp();}
-  } else {
-    // No session - show login screen
-    document.getElementById('loginScreen').classList.add('active');
+  if(sp) sp.remove();
+
+  // ── Check session ──
+  try{
+    const saved = getSession();
+    const users = await getUsers();
+    if(saved && users[saved]){
+      currentUser = users[saved];
+      await initCryptoKey(saved);
+      await loadData();
+      await loadCategories();
+      const{pin,pinEnabled}=await loadSettings();
+      if(pin&&pinEnabled){ showPinScreen('check'); } else { showApp(); }
+    } else {
+      showLoginScreen();
+    }
+  }catch(err){
+    console.error('Startup error:',err);
+    showLoginScreen();
   }
 };
+
+function showLoginScreen(){
+  const ls=document.getElementById('loginScreen');
+  if(ls){
+    ls.classList.add('active');
+    ls.style.display='flex';
+  }
+  // Reset tabs to login
+  switchAuthTab('login');
+}
 </script>
 
 <!-- EDIT TRANSACTION MODAL -->
