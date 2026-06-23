@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-title" content="Money Manager Pro">
 <meta name="description" content="Best personal finance app for India. Track income, expenses, loans, savings goals, net worth and bank SMS. Works offline. By Ullasan KV, Poyanad, Kannur.">
 <meta name="application-name" content="Money Manager Pro">
-<title>Money Manager Pro — Personal Finance Tracker</title>
+<title>Money Manager Pro v18 — Personal Finance Tracker</title>
 <link rel="manifest" href="manifest.json">
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -566,6 +566,9 @@ body{background:var(--bg);color:var(--text);display:flex;flex-direction:column;t
       <h1>Money Manager Pro</h1>
       <p>Professional Finance Tracker</p>
       <p style="font-size:0.68rem;opacity:0.6;margin-top:4px;">by Ullasan KV · Poyanad, Kannur</p>
+      <div id="jsCheck" style="font-size:0.65rem;background:#ffebee;color:#c62828;padding:4px 10px;border-radius:8px;margin-top:8px;display:inline-block;">
+        ⏳ Loading...
+      </div>
     </div>
     <div class="tabs-login">
       <button class="tab-btn active" onclick="switchAuthTab('login')">Sign In</button>
@@ -1152,7 +1155,7 @@ body{background:var(--bg);color:var(--text);display:flex;flex-direction:column;t
         <div style="background:linear-gradient(135deg,#1565c0,#4d96ff);border-radius:16px;padding:20px;color:#fff;text-align:center;margin-bottom:12px;">
           <div style="font-size:2.5rem;margin-bottom:8px;">💰</div>
           <div style="font-size:1rem;font-weight:800;letter-spacing:0.02em;">Money Manager Pro</div>
-          <div style="font-size:0.72rem;opacity:0.85;margin-top:4px;">Version 1.8.0 · Play Store Edition</div>
+          <div style="font-size:0.72rem;opacity:0.85;margin-top:4px;">Version 1.3.0 · v18</div>
           <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.25);">
             <div style="font-size:0.72rem;opacity:0.7;">Developed by</div>
             <div style="font-size:0.92rem;font-weight:800;margin-top:2px;">Ullasan KV</div>
@@ -1348,92 +1351,113 @@ const fmt=n=>'₹'+Math.abs(n).toLocaleString('en-IN',{minimumFractionDigits:2,m
 // INDEXEDDB — Proper database storage
 // Tables: transactions | loans | goals | emis | recurring | settings | users | categories
 // ═══════════════════════════════════════
-const DB_NAME='MoneyManagerProDB', DB_VERSION=3; // bumped to 3 to force clean upgrade
+const DB_NAME='MoneyManagerProDB', DB_VERSION=1;
 let db=null;
 
 function initDB(){
   return new Promise((resolve,reject)=>{
-    const req=indexedDB.open(DB_NAME,DB_VERSION);
-    req.onupgradeneeded=e=>{
-      const d=e.target.result;
-      // Close any existing connections to avoid blocking
-      const stores=[
-        {name:'transactions',key:'id'},
-        {name:'loans',key:'id'},
-        {name:'goals',key:'id'},
-        {name:'emis',key:'id'},
-        {name:'recurring',key:'id'},
-        {name:'settings',key:'key'},
-        {name:'users',key:'username'},
-        {name:'categories',key:'key'},
-      ];
-      stores.forEach(s=>{
-        try{
-          if(!d.objectStoreNames.contains(s.name))
-            d.createObjectStore(s.name,{keyPath:s.key});
-        }catch(err){ console.warn('Store create:',s.name,err); }
-      });
-    };
-    req.onsuccess=e=>{
-      db=e.target.result;
-      // Handle version change blocking
-      db.onversionchange=()=>{ db.close(); location.reload(); };
-      resolve(db);
-    };
-    req.onerror=e=>{
-      console.error('DB Error:',e.target.error);
-      // Try to recover — delete and recreate
-      try{
-        const del=indexedDB.deleteDatabase(DB_NAME);
-        del.onsuccess=()=>{ location.reload(); };
-      }catch(err){}
-      reject(e.target.error);
-    };
-    req.onblocked=()=>{
-      console.warn('DB blocked — closing old connections');
-      if(db) db.close();
-    };
+    // Safety timeout — if DB hangs for 8s, continue anyway
+    const timeout = setTimeout(()=>{
+      console.warn('⚠️ IndexedDB timeout — continuing without DB');
+      resolve(null);
+    }, 8000);
+
+    try{
+      const req = indexedDB.open(DB_NAME, DB_VERSION);
+      req.onblocked = ()=>{
+        // Another tab has DB open — close it
+        console.warn('DB blocked — trying to continue');
+        clearTimeout(timeout);
+        resolve(null);
+      };
+      req.onupgradeneeded = e=>{
+        const d = e.target.result;
+        ['transactions','loans','goals','emis','recurring'].forEach(name=>{
+          if(!d.objectStoreNames.contains(name))
+            d.createObjectStore(name,{keyPath:'id'});
+        });
+        ['settings','categories'].forEach(name=>{
+          if(!d.objectStoreNames.contains(name))
+            d.createObjectStore(name,{keyPath:'key'});
+        });
+        if(!d.objectStoreNames.contains('users'))
+          d.createObjectStore('users',{keyPath:'username'});
+      };
+      req.onsuccess = e=>{
+        clearTimeout(timeout);
+        db = e.target.result;
+        // Handle unexpected DB closes
+        db.onclose = ()=>{ db=null; };
+        db.onerror = e=>console.error('DB runtime error:',e);
+        resolve(db);
+      };
+      req.onerror = e=>{
+        clearTimeout(timeout);
+        console.error('DB open error:',e.target.error);
+        // Don't reject — resolve with null so app can still show login
+        resolve(null);
+      };
+    }catch(e){
+      clearTimeout(timeout);
+      console.error('IndexedDB not available:',e);
+      resolve(null);
+    }
   });
 }
 
 function dbGetAll(store){
-  return new Promise((resolve,reject)=>{
-    const tx=db.transaction(store,'readonly');
-    const req=tx.objectStore(store).getAll();
-    req.onsuccess=()=>resolve(req.result||[]);
-    req.onerror=()=>reject(req.error);
+  if(!db) return Promise.resolve([]);
+  return new Promise((resolve)=>{
+    try{
+      const tx=db.transaction(store,'readonly');
+      const req=tx.objectStore(store).getAll();
+      req.onsuccess=()=>resolve(req.result||[]);
+      req.onerror=()=>resolve([]);
+    }catch(e){ resolve([]); }
   });
 }
 function dbGet(store,key){
-  return new Promise((resolve,reject)=>{
-    const tx=db.transaction(store,'readonly');
-    const req=tx.objectStore(store).get(key);
-    req.onsuccess=()=>resolve(req.result);
-    req.onerror=()=>reject(req.error);
+  if(!db) return Promise.resolve(null);
+  return new Promise((resolve)=>{
+    try{
+      const tx=db.transaction(store,'readonly');
+      const req=tx.objectStore(store).get(key);
+      req.onsuccess=()=>resolve(req.result||null);
+      req.onerror=()=>resolve(null);
+    }catch(e){ resolve(null); }
   });
 }
 function dbPut(store,val){
-  return new Promise((resolve,reject)=>{
-    const tx=db.transaction(store,'readwrite');
-    const req=tx.objectStore(store).put(val);
-    req.onsuccess=()=>resolve();
-    req.onerror=()=>reject(req.error);
+  if(!db) return Promise.resolve();
+  return new Promise((resolve)=>{
+    try{
+      const tx=db.transaction(store,'readwrite');
+      const req=tx.objectStore(store).put(val);
+      req.onsuccess=()=>resolve();
+      req.onerror=()=>resolve();
+    }catch(e){ resolve(); }
   });
 }
 function dbDelete(store,key){
-  return new Promise((resolve,reject)=>{
-    const tx=db.transaction(store,'readwrite');
-    const req=tx.objectStore(store).delete(key);
-    req.onsuccess=()=>resolve();
-    req.onerror=()=>reject(req.error);
+  if(!db) return Promise.resolve();
+  return new Promise((resolve)=>{
+    try{
+      const tx=db.transaction(store,'readwrite');
+      const req=tx.objectStore(store).delete(key);
+      req.onsuccess=()=>resolve();
+      req.onerror=()=>resolve();
+    }catch(e){ resolve(); }
   });
 }
 function dbClear(store){
-  return new Promise((resolve,reject)=>{
-    const tx=db.transaction(store,'readwrite');
-    const req=tx.objectStore(store).clear();
-    req.onsuccess=()=>resolve();
-    req.onerror=()=>reject(req.error);
+  if(!db) return Promise.resolve();
+  return new Promise((resolve)=>{
+    try{
+      const tx=db.transaction(store,'readwrite');
+      const req=tx.objectStore(store).clear();
+      req.onsuccess=()=>resolve();
+      req.onerror=()=>resolve();
+    }catch(e){ resolve(); }
   });
 }
 async function dbPutAll(store,items){
@@ -1448,28 +1472,31 @@ async function dbPutAll(store,items){
 const getKey=k=>`${currentUser.username}_${k}`;
 
 // ══════════════════════════════════════════════════════
-// 🔐 ENCRYPTION ENGINE — AES-256-GCM via Web Crypto API
-// Device-stored random key — persists across sessions
+// 🔐 ENCRYPTION ENGINE — Optional AES-256-GCM
+// Falls back to plain storage if crypto not available
 // ══════════════════════════════════════════════════════
 let _cryptoKey = null;
+const _cryptoAvailable = typeof crypto !== 'undefined' && crypto.subtle != null;
 
 async function encryptData(plainText){
-  if(!_cryptoKey) return plainText;
+  if(!_cryptoKey || !_cryptoAvailable) return plainText;
   try{
     const enc = new TextEncoder();
     const iv  = crypto.getRandomValues(new Uint8Array(12));
     const encrypted = await crypto.subtle.encrypt({name:'AES-GCM',iv}, _cryptoKey, enc.encode(plainText));
-    const combined  = new Uint8Array(iv.byteLength + encrypted.byteLength);
+    const combined  = new Uint8Array(12 + encrypted.byteLength);
     combined.set(iv,0);
-    combined.set(new Uint8Array(encrypted), iv.byteLength);
-    return btoa(String.fromCharCode(...combined));
+    combined.set(new Uint8Array(encrypted), 12);
+    return 'ENC:'+btoa(String.fromCharCode(...combined));
   }catch(e){ return plainText; }
 }
 
 async function decryptData(cipherText){
-  if(!_cryptoKey) return cipherText;
+  if(!_cryptoKey || !_cryptoAvailable) return cipherText;
+  // If not encrypted prefix, return as-is (legacy plain data)
+  if(typeof cipherText !== 'string' || !cipherText.startsWith('ENC:')) return cipherText;
   try{
-    const combined  = Uint8Array.from(atob(cipherText), c=>c.charCodeAt(0));
+    const combined  = Uint8Array.from(atob(cipherText.slice(4)), c=>c.charCodeAt(0));
     const iv        = combined.slice(0,12);
     const data      = combined.slice(12);
     const decrypted = await crypto.subtle.decrypt({name:'AES-GCM',iv}, _cryptoKey, data);
@@ -1478,23 +1505,22 @@ async function decryptData(cipherText){
 }
 
 async function initCryptoKey(username){
+  if(!_cryptoAvailable){ _cryptoKey=null; return; }
   try{
     if(!db){ _cryptoKey=null; return; }
     const stored = await dbGet('settings','__devkey_'+username);
     if(stored && stored.value){
       const raw = Uint8Array.from(atob(stored.value), c=>c.charCodeAt(0));
-      _cryptoKey = await crypto.subtle.importKey('raw', raw, {name:'AES-GCM'}, true, ['encrypt','decrypt']);
+      _cryptoKey = await crypto.subtle.importKey('raw',raw,{name:'AES-GCM'},true,['encrypt','decrypt']);
       return;
     }
-    // Generate new key for this user
-    const key      = await crypto.subtle.generateKey({name:'AES-GCM',length:256}, true, ['encrypt','decrypt']);
-    const exported = await crypto.subtle.exportKey('raw', key);
+    const key      = await crypto.subtle.generateKey({name:'AES-GCM',length:256},true,['encrypt','decrypt']);
+    const exported = await crypto.subtle.exportKey('raw',key);
     const b64      = btoa(String.fromCharCode(...new Uint8Array(exported)));
-    await dbPut('settings',{key:'__devkey_'+username, value:b64});
+    await dbPut('settings',{key:'__devkey_'+username,value:b64});
     _cryptoKey = key;
-    console.log('🔐 New encryption key generated');
   }catch(e){
-    console.error('Crypto init error:',e);
+    console.warn('Crypto unavailable — using plain storage:',e.message);
     _cryptoKey = null;
   }
 }
@@ -1574,20 +1600,18 @@ async function loadData(){
 }
 
 // ── Users stored in IndexedDB ──
-async function getUsers(){
-  try{
-    const all=await dbGetAll('users');
-    const map={};
-    all.forEach(u=>map[u.username]=u);
-    return map;
-  }catch{return{};}
+// ── SYNC user storage — localStorage ONLY, no async needed ──
+function getUsersSync(){
+  try{ const r=localStorage.getItem('mmp_users_v2'); return r?JSON.parse(r):{} }catch(e){ return {}; }
 }
-async function saveUsers(umap){
-  try{
-    await dbClear('users');
-    for(const u of Object.values(umap)) await dbPut('users',u);
-  }catch(err){console.error('saveUsers error:',err);}
+function saveUsersSync(umap){
+  try{ localStorage.setItem('mmp_users_v2',JSON.stringify(umap)); }catch(e){}
+  // Also save to IndexedDB in background (non-blocking)
+  try{ for(const u of Object.values(umap)) dbPut('users',u); }catch(e){}
 }
+// Keep async versions as aliases for backward compatibility
+async function getUsers(){ return getUsersSync(); }
+async function saveUsers(umap){ saveUsersSync(umap); }
 
 // ── Categories in IndexedDB ──
 async function saveCategories(){
@@ -1677,7 +1701,16 @@ async function migrateFromLocalStorage(){
   }catch(err){console.error('Migration error:',err);}
 }
 function showToast(msg,dur=1800){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);}
-function showError(msg, isSuccess=false){const e=document.getElementById('authError');e.textContent=msg;e.style.display='block';setTimeout(()=>e.style.display='none',3000);}
+function showError(msg, isSuccess=false){
+  const el=document.getElementById('authError');
+  if(!el)return;
+  el.textContent=msg;
+  el.style.display='block';
+  el.style.background=isSuccess?'#e8f5e9':'';
+  el.style.color=isSuccess?'#2e7d32':'';
+  el.style.borderColor=isSuccess?'#a5d6a7':'';
+  if(!isSuccess) setTimeout(()=>{ el.style.display='none'; },3500);
+}
 function openModal(id){
   document.getElementById(id).classList.add('open');
   history.pushState({modal:id},'');
@@ -1741,15 +1774,9 @@ AVATARS.forEach(a=>{
   ap.appendChild(d);
 });
 function switchAuthTab(tab){
-  const lf=document.getElementById('loginForm');
-  const rf=document.getElementById('registerForm');
-  if(lf) lf.style.display=tab==='login'?'block':'none';
-  if(rf) rf.style.display=tab==='register'?'block':'none';
-  document.querySelectorAll('.tab-btn').forEach((b,i)=>{
-    b.classList.toggle('active',(tab==='login'&&i===0)||(tab==='register'&&i===1));
-  });
-  const errEl=document.getElementById('authError');
-  if(errEl) errEl.style.display='none';
+  document.getElementById('loginForm').style.display=tab==='login'?'block':'none';
+  document.getElementById('registerForm').style.display=tab==='register'?'block':'none';
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',(tab==='login'&&i===0)||(tab==='register'&&i===1)));
 }
 async function doRegister(){
   const name    = document.getElementById('regName').value.trim();
@@ -1798,18 +1825,34 @@ async function doRegister(){
     if(btn){ btn.textContent=oldTxt; btn.disabled=false; }
   }
 }
-async function doLogin(){
-  const user=document.getElementById('loginUser').value.trim().toLowerCase();
-  const pass=document.getElementById('loginPass').value;
-  if(!user||!pass)return showError('Enter username & password.');
-  const users=await getUsers();
-  if(!users[user]||users[user].password!==pass)return showError('Invalid credentials.');
-  currentUser=users[user];
-  // 🔐 Load device key BEFORE loading data
-  await initCryptoKey(user);
-  await loadData();await loadCategories();const{pin,pinEnabled}=await loadSettings();
+function doLogin(){
+  // Fully synchronous login — works in any WebView
+  var userEl = document.getElementById('loginUser');
+  var passEl = document.getElementById('loginPass');
+  if(!userEl||!passEl){ showError('Form error. Please reload.'); return; }
+  var user = userEl.value.trim().toLowerCase();
+  var pass = passEl.value;
+  if(!user||!pass){ showError('Enter username & password.'); return; }
+
+  var users = getUsersSync();
+  if(!users[user]){ showError('Username not found. Please register.'); return; }
+  if(users[user].password !== pass){ showError('Wrong password. Try again.'); return; }
+
+  // Credentials OK — set session
+  currentUser = users[user];
   setSession(user);
-  if(pin&&pinEnabled){showPinScreen('check');}else{showApp();}
+
+  // Load data async in background, then show app
+  (async function(){
+    try{ await initCryptoKey(user); }catch(e){}
+    try{ await loadData(); }catch(e){}
+    try{ await loadCategories(); }catch(e){}
+    try{
+      var ps = await loadSettings();
+      if(ps && ps.pin && ps.pinEnabled){ showPinScreen('check'); }
+      else{ showApp(); }
+    }catch(e){ showApp(); }
+  })();
 }
 function doLogout(){
   clearCryptoKey();
@@ -2767,7 +2810,7 @@ async function exportJSON(){
     }catch(e){ console.log('export module read',e); }
 
     const backupObj={
-      appVersion:'1.8.0',
+      appVersion:'1.3.0',
       appName:'Money Manager Pro',
       developer:'Ullasan KV, Poyanad, Kannur, Kerala',
       user:currentUser.name,
@@ -2797,10 +2840,7 @@ function exportTxt(){
   transactions.forEach(t=>{txt+=`${t.date} | ${t.type.toUpperCase()} | ${t.category} | ${fmt(t.amount)}${t.note?' | '+t.note:''}\n`;});
   downloadFile('ullasan-report-'+Date.now()+'.txt',txt,'text/plain');showToast('📄 Text report exported!');
 }
-function downloadFile(name, content, type){
-  // Always show in-app export modal — most reliable for Median/WebView
-  showExportModal(name, content, type);
-}
+/* old downloadFile removed */
 
 function showExportModal(name, content, type){
   const existing = document.getElementById('exportModal');
@@ -3697,8 +3737,7 @@ function exportLedgerStatement(){
     balance += e.debit - e.credit;
     lines.push(`"${e.date}","${e.details}","${e.debit||''}","${e.credit||''}","${Math.abs(balance)} ${balance>0?'Dr':'Cr'}"`);
   });
-  const csv = lines.join('
-');
+  const csv = lines.join('\r\n');
   const fname = 'ledger-'+ledgerActivePerson.replace(/\s+/g,'_')+'-'+new Date().toISOString().split('T')[0]+'.csv';
   downloadFile(fname, csv, 'text/csv');
 }
@@ -4856,7 +4895,7 @@ function saveUserToFirebase(user){
       username:user.username,
       avatar:user.avatar,
       registeredAt:user.registeredAt,
-      appVersion:'1.8.0',
+      appVersion:'1.3.0',
       platform:navigator.userAgent.substring(0,80)
     };
     firebaseDB.ref('users/'+user.username).set(safe);
@@ -5079,73 +5118,53 @@ function dismissInstall(){
 }
 
 window.onload=async()=>{
-  history.pushState({tab:'home'},'');
-  initFirebase();
+  try{ history.pushState({tab:'home'},''); }catch(e){}
+  try{ initFirebase(); }catch(e){}
+  // Redraw canvas charts on resize
   window.addEventListener('resize',()=>{ renderMiniChart(); });
-
-  // ── Show loading splash ──
+  // Show loading splash
+  // Show DB loading overlay without destroying login form
   const splash=document.createElement('div');
   splash.id='dbSplash';
-  splash.style.cssText='position:fixed;inset:0;background:#fff;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;font-family:var(--font);';
-  splash.innerHTML=`
-    <div style="font-size:3.5rem;">💰</div>
-    <div style="font-size:1rem;font-weight:800;color:#1565c0;">Money Manager Pro</div>
-    <div id="splashStatus" style="font-size:0.78rem;color:#888;">Starting...</div>
-    <div style="width:44px;height:44px;border:4px solid #e3f2fd;border-top:4px solid #1565c0;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
-    <div style="font-size:0.65rem;color:#bbb;margin-top:8px;">by Ullasan KV · Poyanad, Kannur</div>`;
+  splash.style.cssText='position:fixed;inset:0;background:#fff;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;';
+  splash.innerHTML=`<div style="font-size:3rem;">🏦</div>
+    <div style="font-size:1rem;font-weight:700;color:#1565c0;">Money Manager Pro</div>
+    <div style="font-size:0.82rem;color:#888;">Starting database...</div>
+    <div style="width:48px;height:48px;border:4px solid #e3f2fd;border-top:4px solid #1565c0;border-radius:50%;animation:spin 0.8s linear infinite;"></div>`;
   document.body.appendChild(splash);
-
-  const setSplashStatus = t => {
-    const el=document.getElementById('splashStatus');
-    if(el) el.textContent=t;
-  };
-
-  // ── Init DB ──
   try{
-    setSplashStatus('Opening database...');
     await initDB();
-    setSplashStatus('Checking data...');
     await migrateFromLocalStorage();
   }catch(err){
-    console.error('DB init error:',err);
-    setSplashStatus('Database error — restarting...');
-    setTimeout(()=>location.reload(), 2000);
-    return;
+    console.error('DB init failed:',err);
   }
-
-  // ── Remove splash ──
+  // Remove loading splash — ALWAYS, even on error
   const sp=document.getElementById('dbSplash');
-  if(sp) sp.remove();
+  if(sp)sp.remove();
 
-  // ── Check session ──
   try{
-    const saved = getSession();
-    const users = await getUsers();
-    if(saved && users[saved]){
-      currentUser = users[saved];
+    const saved=getSession();
+    const users=await getUsers();
+    if(saved&&users[saved]){
+      currentUser=users[saved];
       await initCryptoKey(saved);
       await loadData();
       await loadCategories();
       const{pin,pinEnabled}=await loadSettings();
-      if(pin&&pinEnabled){ showPinScreen('check'); } else { showApp(); }
+      if(pin&&pinEnabled){ showPinScreen('check'); }
+      else{ showApp(); }
     } else {
-      showLoginScreen();
+      document.getElementById('loginScreen').classList.add('active');
     }
-  }catch(err){
-    console.error('Startup error:',err);
-    showLoginScreen();
+  }catch(e){
+    // If anything fails, always show login screen so user is never stuck
+    console.error('Startup error:',e);
+    document.getElementById('loginScreen').classList.add('active');
   }
+  // Update JS health indicator
+  var jc=document.getElementById('jsCheck');
+  if(jc){ jc.textContent='✅ App Ready — v18'; jc.style.background='#e8f5e9'; jc.style.color='#2e7d32'; }
 };
-
-function showLoginScreen(){
-  const ls=document.getElementById('loginScreen');
-  if(ls){
-    ls.classList.add('active');
-    ls.style.display='flex';
-  }
-  // Reset tabs to login
-  switchAuthTab('login');
-}
 </script>
 
 <!-- EDIT TRANSACTION MODAL -->
