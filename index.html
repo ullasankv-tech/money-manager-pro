@@ -5072,20 +5072,31 @@ function renderPremiumBadge(){
 // ══════════════════════════════════════════════════════
 // SERVICE WORKER REGISTRATION
 // ══════════════════════════════════════════════════════
-if('serviceWorker' in navigator){
+// Only register SW in real browsers — NOT in Android WebView/Median
+// WebView does not support Service Workers and throws errors
+function isWebView(){
+  var ua = navigator.userAgent||'';
+  // Detect Android WebView — it contains 'wv' or 'WebView'
+  return /wv/.test(ua) || /Android.*Version\/[\d.]+.*Chrome\/[\d.]+ Mobile/.test(ua)
+      || (typeof Android !== 'undefined')
+      || window.location.protocol === 'file:';
+}
+if('serviceWorker' in navigator && !isWebView()){
   window.addEventListener('load',()=>{
     navigator.serviceWorker.register('./sw.js')
       .then(r=>console.log('✅ SW registered:',r.scope))
-      .catch(e=>console.log('SW error:',e));
+      .catch(e=>console.log('SW skipped:',e.message));
   });
+} else {
+  console.log('ℹ️ Service Worker skipped — WebView environment');
 }
 
-// ── PWA Install Prompt ──
+// ── PWA Install Prompt (browser only) ──
 let deferredPrompt=null;
+try{
 window.addEventListener('beforeinstallprompt',e=>{
   e.preventDefault();
   deferredPrompt=e;
-  // Show install banner after 3 seconds if not installed
   setTimeout(()=>{
     if(deferredPrompt) showInstallBanner();
   },3000);
