@@ -186,6 +186,25 @@ body{background:var(--bg);color:var(--text);display:flex;flex-direction:column;t
 .recur-amount{font-size:0.9rem;font-weight:800;}
 .recur-del{background:none;border:none;color:var(--muted);font-size:0.85rem;cursor:pointer;padding:4px;}
 
+
+/* DR / CR INCOME & EXPENDITURE STATEMENT */
+.ie-statement{display:grid;grid-template-columns:1fr 1fr;border:2px solid #263238;border-radius:12px;overflow:hidden;background:#fff;margin-bottom:14px;}
+.ie-side{min-width:0;display:flex;flex-direction:column;}
+.ie-side:first-child{border-right:2px solid #263238;}
+.ie-head{display:flex;justify-content:space-between;gap:8px;padding:10px;background:#263238;color:#fff;font-size:0.74rem;font-weight:800;}
+.ie-body{min-height:220px;display:flex;flex-direction:column;}
+.ie-entry{display:flex;justify-content:space-between;gap:8px;padding:8px;border-bottom:1px solid #e0e0e0;font-size:0.75rem;align-items:flex-start;}
+.ie-entry-main{display:flex;gap:6px;min-width:0;flex:1;}
+.ie-date{font-size:0.62rem;color:#777;min-width:42px;flex-shrink:0;padding-top:1px;}
+.ie-desc{font-weight:650;line-height:1.25;word-break:break-word;}
+.ie-amt{font-weight:800;white-space:nowrap;text-align:right;}
+.ie-debit .ie-amt{color:#e53935;}
+.ie-credit .ie-amt{color:#00897b;}
+.ie-balance{margin-top:auto;background:#fff8e1;border-top:2px solid #f9a825;font-weight:800;}
+.ie-balance .ie-amt{color:#263238;}
+.ie-total{display:flex;justify-content:space-between;padding:10px;background:#eceff1;border-top:2px solid #263238;font-size:0.82rem;font-weight:900;}
+.ie-empty{padding:18px 8px;text-align:center;color:#999;font-size:0.75rem;}
+@media(max-width:520px){.ie-statement{font-size:0.9em;}.ie-entry{padding:7px 6px;gap:4px;}.ie-date{display:none;}.ie-head{padding:9px 7px;font-size:0.68rem;}.ie-desc{font-size:0.7rem;}.ie-amt{font-size:0.72rem;}}
 /* REPORT */
 .report-tabs{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px;}
 .report-tabs::-webkit-scrollbar{display:none;}
@@ -2595,82 +2614,32 @@ function renderStatement(){
   const allDates=transactions.map(t=>t.date).sort();
   const stFrom=dwFrom||allDates[0]||today;
   const stTo=dwTo||today;
-  let txns=[...transactions].filter(t=>t.date>=stFrom&&t.date<=stTo);
-  const income=txns.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
-  const expense=txns.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
-  const net=income-expense;
+  const txns=[...transactions]
+    .filter(t=>t.date>=stFrom&&t.date<=stTo)
+    .sort((a,b)=>a.date.localeCompare(b.date));
+  const incomeTxns=txns.filter(t=>t.type==='income');
+  const expenseTxns=txns.filter(t=>t.type==='expense');
+  const income=incomeTxns.reduce((s,t)=>s+t.amount,0);
+  const expense=expenseTxns.reduce((s,t)=>s+t.amount,0);
+  const balance=income-expense;
+  const total=Math.max(income,expense);
   const fl=new Date(stFrom+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
   const tl=new Date(stTo+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
-  if(!txns.length){rc.innerHTML=`<div style="text-align:center;padding:24px;color:var(--muted);">No transactions found for this date range.</div>`;return;}
 
-  // ── Group by category ──
-  const groupBy=(type)=>{
-    const filtered=txns.filter(t=>t.type===type);
-    const total=filtered.reduce((s,t)=>s+t.amount,0);
-    const map={};
-    filtered.forEach(t=>{
-      if(!map[t.category])map[t.category]={amount:0,count:0};
-      map[t.category].amount+=t.amount;
-      map[t.category].count++;
-    });
-    return{map,total,count:filtered.length};
-  };
-  const inc=groupBy('income');
-  const exp=groupBy('expense');
-
-  // ── Build category table rows ──
-  const buildRows=(map,total,type)=>{
-    const cats=[...INCOME_CATS,...EXPENSE_CATS];
-    const color=type==='income'?'#00897b':'#e53935';
-    const bgHeader=type==='income'?'linear-gradient(135deg,#00897b,#00acc1)':'linear-gradient(135deg,#e53935,#ff7043)';
-    const bgRow=type==='income'?'#f0fff8':'#fff8f8';
-    const bgRowAlt=type==='income'?'#e8faf4':'#ffeeee';
-    const entries=Object.entries(map).sort((a,b)=>b[1].amount-a[1].amount);
-    if(!entries.length) return `<div style="padding:14px;text-align:center;color:#aaa;font-size:0.82rem;">No ${type} entries in this period.</div>`;
-    let sno=0;
-    const rows=entries.map(([catName,data])=>{
-      sno++;
-      const cat=cats.find(c=>c.name===catName)||{emoji:'💰'};
-      const pct=total>0?((data.amount/total)*100).toFixed(1):0;
-      const bg=sno%2===0?bgRowAlt:bgRow;
-      return`<tr>
-        <td style="padding:9px 10px;border-bottom:1.5px solid #e0e0e0;border-right:1.5px solid #e0e0e0;text-align:center;color:#888;font-weight:700;font-size:0.72rem;background:${bg};">${sno}</td>
-        <td style="padding:9px 10px;border-bottom:1.5px solid #e0e0e0;border-right:1.5px solid #e0e0e0;font-weight:700;font-size:0.82rem;background:${bg};">${cat.emoji} ${catName}</td>
-        <td style="padding:9px 10px;border-bottom:1.5px solid #e0e0e0;border-right:1.5px solid #e0e0e0;text-align:center;color:#888;font-size:0.78rem;background:${bg};">${data.count}</td>
-        <td style="padding:9px 10px;border-bottom:1.5px solid #e0e0e0;border-right:1.5px solid #e0e0e0;text-align:center;font-size:0.78rem;background:${bg};">
-          <div style="height:7px;background:#e0e0e0;border-radius:10px;overflow:hidden;width:60px;display:inline-block;vertical-align:middle;margin-right:4px;">
-            <div style="height:100%;width:${pct}%;background:${color};border-radius:10px;"></div>
-          </div>${pct}%
-        </td>
-        <td style="padding:9px 10px;border-bottom:1.5px solid #e0e0e0;text-align:right;color:${color};font-weight:800;font-size:0.85rem;background:${bg};">${fmt(data.amount)}</td>
-      </tr>`;
-    }).join('');
-    const totalRow=`<tr>
-      <td colspan="2" style="padding:10px;border-top:2.5px solid ${color};background:#f5f5f5;font-weight:800;font-size:0.82rem;">TOTAL (${entries.length} categories)</td>
-      <td style="padding:10px;border-top:2.5px solid ${color};background:#f5f5f5;text-align:center;color:#888;font-weight:700;">${Object.values(map).reduce((s,v)=>s+v.count,0)}</td>
-      <td style="padding:10px;border-top:2.5px solid ${color};background:#f5f5f5;text-align:center;color:#888;font-weight:700;">100%</td>
-      <td style="padding:10px;border-top:2.5px solid ${color};background:#f5f5f5;text-align:right;color:${color};font-weight:800;font-size:0.9rem;">${fmt(total)}</td>
-    </tr>`;
-    return`<div style="border:2.5px solid ${color};border-radius:14px;overflow:hidden;margin-bottom:14px;">
-      <div style="background:${bgHeader};color:#fff;padding:10px 14px;font-size:0.75rem;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;">
-        ${type==='income'?'💰 Income by Category':'💸 Expense by Category'}
-      </div>
-      <div style="overflow-x:auto;">
-        <table style="width:100%;border-collapse:separate;border-spacing:0;min-width:340px;">
-          <thead>
-            <tr>
-              <th style="background:${bgHeader};color:#fff;padding:9px 10px;font-size:0.65rem;text-transform:uppercase;font-weight:800;border-right:1.5px solid rgba(255,255,255,0.3);text-align:center;width:28px;">#</th>
-              <th style="background:${bgHeader};color:#fff;padding:9px 10px;font-size:0.65rem;text-transform:uppercase;font-weight:800;border-right:1.5px solid rgba(255,255,255,0.3);">Category</th>
-              <th style="background:${bgHeader};color:#fff;padding:9px 10px;font-size:0.65rem;text-transform:uppercase;font-weight:800;border-right:1.5px solid rgba(255,255,255,0.3);text-align:center;">Entries</th>
-              <th style="background:${bgHeader};color:#fff;padding:9px 10px;font-size:0.65rem;text-transform:uppercase;font-weight:800;border-right:1.5px solid rgba(255,255,255,0.3);text-align:center;">Share</th>
-              <th style="background:${bgHeader};color:#fff;padding:9px 10px;font-size:0.65rem;text-transform:uppercase;font-weight:800;text-align:right;">Amount (₹)</th>
-            </tr>
-          </thead>
-          <tbody>${rows}${totalRow}</tbody>
-        </table>
-      </div>
+  const entryRows=(list)=>list.map(t=>{
+    const cat=[...INCOME_CATS,...EXPENSE_CATS].find(c=>c.name===t.category)||{emoji:'📦'};
+    const date=new Date(t.date+'T00:00:00').toLocaleDateString('en-IN',{day:'2-digit',month:'short'});
+    const note=t.note?`<div style="font-size:0.66rem;color:var(--muted);margin-top:2px;">${t.note}</div>`:'';
+    return `<div class="ie-entry">
+      <div class="ie-entry-main"><span class="ie-date">${date}</span><span class="ie-desc">${cat.emoji} ${t.category}${note}</span></div>
+      <span class="ie-amt">${fmt(t.amount)}</span>
     </div>`;
-  };
+  }).join('');
+
+  const debitBalance=balance>0?balance:0;
+  const creditBalance=balance<0?Math.abs(balance):0;
+  const debitRows=entryRows(expenseTxns)+(debitBalance?`<div class="ie-entry ie-balance"><div class="ie-entry-main"><span class="ie-date"></span><span class="ie-desc">By Balance c/d</span></div><span class="ie-amt">${fmt(debitBalance)}</span></div>`:'');
+  const creditRows=entryRows(incomeTxns)+(creditBalance?`<div class="ie-entry ie-balance"><div class="ie-entry-main"><span class="ie-date"></span><span class="ie-desc">To Balance c/d</span></div><span class="ie-amt">${fmt(creditBalance)}</span></div>`:'');
 
   rc.innerHTML=`
     <div class="date-filter-row" style="margin-bottom:12px;">
@@ -2680,18 +2649,28 @@ function renderStatement(){
       <button class="date-filter-btn" onclick="dwFrom=document.getElementById('st-from').value;dwTo=document.getElementById('st-to').value;renderStatement();">Go</button>
     </div>
     <div class="statement-header">
-      <h2>📊 Category-wise Summary</h2>
+      <h2>📒 Income & Expenditure Statement</h2>
       <p style="font-size:0.88rem;margin-top:4px;opacity:0.9;">${currentUser.name}</p>
       <p style="font-size:0.8rem;opacity:0.85;margin-top:3px;">📅 ${fl} &nbsp;→&nbsp; ${tl}</p>
-      <p style="font-size:0.68rem;opacity:0.65;margin-top:3px;">Generated: ${new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'})}</p>
     </div>
-    ${buildRows(inc.map,inc.total,'income')}
-    ${buildRows(exp.map,exp.total,'expense')}
+    <div class="ie-statement">
+      <div class="ie-side ie-debit">
+        <div class="ie-head"><span>Dr. — Expenditure</span><span>Amount</span></div>
+        <div class="ie-body">${debitRows||'<div class="ie-empty">No expenditure entries</div>'}</div>
+        <div class="ie-total"><span>Total</span><span>${fmt(total)}</span></div>
+      </div>
+      <div class="ie-side ie-credit">
+        <div class="ie-head"><span>Cr. — Income</span><span>Amount</span></div>
+        <div class="ie-body">${creditRows||'<div class="ie-empty">No income entries</div>'}</div>
+        <div class="ie-total"><span>Total</span><span>${fmt(total)}</span></div>
+      </div>
+    </div>
     <div class="stmt-summary-box">
-      <div class="stmt-summary-row"><span class="stmt-summary-label">💰 Total Income</span><span class="stmt-summary-val" style="color:#00897b;">+ ${fmt(income)}</span></div>
-      <div class="stmt-summary-row"><span class="stmt-summary-label">💸 Total Expenditure</span><span class="stmt-summary-val" style="color:#e53935;">- ${fmt(expense)}</span></div>
-      <div class="stmt-summary-row"><span class="stmt-summary-label" style="font-size:0.95rem;">💾 Net Balance</span><span class="stmt-summary-val" style="font-size:1.05rem;">${net>=0?'+ ':'- '}${fmt(net)}</span></div>
+      <div class="stmt-summary-row"><span class="stmt-summary-label">💰 Credit / Income Total</span><span class="stmt-summary-val" style="color:#00897b;">${fmt(income)}</span></div>
+      <div class="stmt-summary-row"><span class="stmt-summary-label">💸 Debit / Expenditure Total</span><span class="stmt-summary-val" style="color:#e53935;">${fmt(expense)}</span></div>
+      <div class="stmt-summary-row"><span class="stmt-summary-label" style="font-size:0.95rem;">⚖️ Closing Balance</span><span class="stmt-summary-val" style="font-size:1.05rem;">${balance>=0?'Surplus: ':'Deficit: '}${fmt(Math.abs(balance))}</span></div>
     </div>
+    <div style="font-size:0.72rem;color:var(--muted);text-align:center;margin:8px 0 12px;">The balance is automatically added to the smaller side so that Debit and Credit totals are equal.</div>
     <button class="stmt-print-btn" onclick="window.print()">🖨️ Print / Save as PDF</button>`;
 }
 
