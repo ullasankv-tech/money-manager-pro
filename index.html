@@ -5107,6 +5107,9 @@ window.addEventListener('appinstalled',()=>{
   if(b)b.style.display='none';
   showToast('🎉 App installed successfully!');
 });
+}catch(e){
+  console.log('PWA install prompt unavailable:', e.message);
+}
 
 function showInstallBanner(){
   const b=document.getElementById('installBanner');
