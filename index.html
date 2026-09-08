@@ -2822,48 +2822,66 @@ function exportTxt(){
 /* old downloadFile removed */
 
 async function downloadJSONBackup(name, content){
-  try{
-    // Use a generic binary MIME type so Android/WebView treats the backup as a file
-    // and does not try to render its contents as a web page.
-    const blob = new Blob([content], {type:'application/octet-stream'});
+  const blob = new Blob([content], {type:'application/json;charset=utf-8'});
+  const file = new File([blob], name, {type:'application/json;charset=utf-8', lastModified:Date.now()});
 
-    // Where supported, let the user choose the exact save location.
-    if(window.showSaveFilePicker){
-      try{
-        const handle = await window.showSaveFilePicker({
-          suggestedName:name,
-          types:[{description:'Money Manager Pro Backup',accept:{'application/json':['.json']}}]
-        });
-        const writable = await handle.createWritable();
-        await writable.write(blob);
-        await writable.close();
-        showToast('✅ JSON backup saved successfully!');
-        return;
-      }catch(e){
-        if(e && e.name==='AbortError') return;
-        console.log('Save picker unavailable',e);
-      }
+  // 1. Desktop/Android browsers that support the real Save As picker.
+  if(typeof window.showSaveFilePicker === 'function'){
+    try{
+      const handle = await window.showSaveFilePicker({
+        suggestedName:name,
+        types:[{description:'JSON Backup',accept:{'application/json':['.json']}}]
+      });
+      const writable = await handle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      showToast('✅ Backup saved successfully!');
+      return;
+    }catch(e){
+      if(e && e.name==='AbortError') return;
+      console.log('Save picker unavailable:', e);
     }
+  }
 
-    // Standard download. This avoids the Android share sheet, which could send
-    // the backup to another app such as ChatGPT instead of saving it.
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = name;
-    a.rel = 'noopener';
-    a.style.display = 'none';
+  // 2. Preferred mobile fallback. This opens Android's share sheet so the user
+  // can explicitly choose where to place the backup (Files, Drive, etc.).
+  // This is much safer than navigating to a data: URL, which can display the
+  // JSON contents inside another app instead of creating a file.
+  try{
+    if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({
+        files:[file],
+        title:'Money Manager Pro Backup',
+        text:'Save your Money Manager Pro backup file'
+      });
+      showToast('📂 Choose a location or app to save your backup.');
+      return;
+    }
+  }catch(e){
+    if(e && e.name==='AbortError') return;
+    console.log('File sharing unavailable:', e);
+  }
+
+  // 3. Standard download fallback. Use a Blob URL, never a data: URL.
+  // Blob URLs prevent the WebView from treating the JSON as page content.
+  try{
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download=name;
+    a.style.display='none';
     document.body.appendChild(a);
     a.click();
     setTimeout(()=>{
-      if(a.parentNode) a.parentNode.removeChild(a);
-      URL.revokeObjectURL(url);
-    }, 3000);
-    showToast('💾 Backup download started — check your Downloads folder.');
+      try{a.remove();URL.revokeObjectURL(url);}catch(e){}
+    },2000);
+    showToast('💾 Backup created. Check your Downloads folder.');
+    return;
   }catch(e){
     console.error('Backup download failed',e);
-    showToast('⚠️ Could not save the backup on this device.');
   }
+
+  showToast('⚠️ Backup could not be saved on this device.');
 }
 
 function exportTxt(){
