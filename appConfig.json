@@ -1,0 +1,428 @@
+{
+  "general": {
+    "userAgentRegexes": [],
+    "replaceStrings": [],
+    "publicKey": "wemlanx",
+    "deviceRegKey": "96k37ngxm4bc1hftypcajqdch0",
+    "appName": "Money Manager Pro v18 — Person",
+    "initialUrl": "https://ullasankv-tech.github.io/money-manager-pro/",
+    "keepScreenOn": null,
+    "screenOrientation": {
+      "iphone": null,
+      "ipad": null,
+      "androidPhone": null,
+      "androidTablet": null
+    },
+    "enableWindowOpen": true,
+    "userAgentAdd": "median",
+    "forceUserAgent": "",
+    "iosUserAgentAdd": "median",
+    "iosForceUserAgent": "",
+    "androidUserAgentAdd": "median",
+    "androidForceUserAgent": "",
+    "languages": [],
+    "nativeBridgeUrls": [],
+    "iosBundleId": "co.median.ios.wemlanx",
+    "androidPackageName": "co.median.android.wemlanx",
+    "androidVersionName": "12",
+    "androidSigningKey": "release",
+    "iosCustomHeaders": {},
+    "androidCustomHeaders": {},
+    "injectMedianJS": true,
+    "forceSessionCookieExpiry": 0
+  },
+  "navigation": {
+    "ignorePageFinishedRegexes": [],
+    "redirects": [],
+    "iosSettings": {},
+    "iosPullToRefresh": true,
+    "androidPullToRefresh": false,
+    "swipeGestures": null,
+    "iosConnectionOfflineTime": 10,
+    "androidConnectionOfflineTime": 10,
+    "regexInternalExternal": {
+      "active": true,
+      "rules": [
+        {
+          "regex": "^(?!https?://).*",
+          "mode": "external",
+          "label": "Non-web links",
+          "pagesToTrigger": "custom"
+        },
+        {
+          "regex": "https?://([-\\w]+\\.)*facebook\\.com.*",
+          "mode": "appbrowser",
+          "label": "Facebook",
+          "pagesToTrigger": "custom"
+        },
+        {
+          "regex": "https?://([\\-\\w]+\\.)*(twitter|x)\\.com/.*",
+          "mode": "appbrowser",
+          "label": "Twitter/X",
+          "pagesToTrigger": "custom"
+        },
+        {
+          "regex": "https?://([-\\w]+\\.)*instagram\\.com/.*",
+          "mode": "appbrowser",
+          "label": "Instagram",
+          "pagesToTrigger": "custom"
+        },
+        {
+          "regex": "https?://maps\\.google\\.com.*",
+          "mode": "appbrowser",
+          "label": "Google Maps",
+          "pagesToTrigger": "custom"
+        },
+        {
+          "regex": "https?://([-\\w]+\\.)*google\\.com/maps/search/.*",
+          "mode": "appbrowser",
+          "label": "Google Maps Search",
+          "pagesToTrigger": "custom"
+        },
+        {
+          "regex": "https?://([-\\w]+\\.)*linkedin\\.com/.*",
+          "mode": "appbrowser",
+          "label": "LinkedIn",
+          "pagesToTrigger": "custom"
+        },
+        {
+          "regex": "https?://login\\.microsoftonline\\.com.*",
+          "mode": "internal",
+          "label": "Microsoft Login",
+          "pagesToTrigger": "custom"
+        },
+        {
+          "regex": "https?:\\/\\/([-\\w]+\\.)*github.io(\\/.*)?$",
+          "mode": "internal",
+          "label": "All pages on my domain",
+          "pagesToTrigger": "domain"
+        },
+        {
+          "regex": ".*",
+          "mode": "appbrowser",
+          "label": "All Other Links",
+          "pagesToTrigger": "all"
+        }
+      ]
+    },
+    "deepLinkDomains": {
+      "enableAndroidApplinks": false,
+      "domains": []
+    },
+    "navigationTitles": {
+      "active": true,
+      "titles": []
+    },
+    "iosShowRefreshButton": false,
+    "androidShowRefreshButton": false,
+    "actionConfig": {
+      "active": true,
+      "actions": [],
+      "actionSelection": []
+    },
+    "navigationLevels": {
+      "active": true,
+      "levels": []
+    },
+    "sidebarNavigation": {
+      "menuSelectionConfig": {
+        "redirectLocations": [
+          {
+            "regex": ".*",
+            "menuName": "default",
+            "loggedIn": true
+          }
+        ]
+      },
+      "menus": [
+        {
+          "active": false,
+          "name": "default",
+          "items": [
+            {
+              "url": "https://ullasankv-tech.github.io/money-manager-pro/#",
+              "label": "Privacy policy",
+              "subLinks": []
+            }
+          ]
+        }
+      ]
+    },
+    "tabNavigation": {
+      "active": false,
+      "tabMenus": [],
+      "tabSelectionConfig": []
+    },
+    "androidShowOfflinePage": true,
+    "iosShowOfflinePage": true,
+    "toolbarNavigation": {
+      "enabled": false,
+      "visibilityByPages": "allPages",
+      "visibilityByBackButton": "backButtonActive",
+      "regexes": [
+        {
+          "enabled": true,
+          "regex": ".*"
+        }
+      ],
+      "items": [
+        {
+          "system": "back",
+          "titleType": "defaultText",
+          "visibility": "allPages",
+          "urlRegex": [
+            {
+              "enabled": true,
+              "regex": ".*"
+            }
+          ]
+        },
+        {
+          "system": "refresh",
+          "enabled": false,
+          "visibility": "allPages",
+          "urlRegex": [
+            {
+              "enabled": true,
+              "regex": ".*"
+            }
+          ]
+        },
+        {
+          "system": "forward",
+          "enabled": false,
+          "titleType": "defaultText",
+          "visibility": "allPages",
+          "urlRegex": [
+            {
+              "enabled": true,
+              "regex": ".*"
+            }
+          ]
+        }
+      ]
+    },
+    "maxWindows": {
+      "enabled": false,
+      "numWindows": 5,
+      "autoClose": false
+    }
+  },
+  "styling": {
+    "splashScreen": {
+      "ios": {
+        "backgroundImage": "https://gonativeio.s3.amazonaws.com/app_files/wemlanx/1788940114574_tdq71jh97f3mp_FFFFFF_1_2x2.png",
+        "backgroundImageDark": "https://gonativeio.s3.amazonaws.com/app_files/wemlanx/1788940114589_0jpc59jd6rz4w_696033_1_2x2.png",
+        "backgroundColor": "#FFFFFF",
+        "backgroundColorDark": "#696033",
+        "centerImage": "https://s3.amazonaws.com/gonativeio/app_files/wemlanx/app_icon_android.png",
+        "centerImageDark": "https://s3.amazonaws.com/gonativeio/app_files/wemlanx/app_icon_android.png",
+        "animation": null,
+        "animationDark": null,
+        "animationFrame": null,
+        "animationFrameDark": null,
+        "animationLoop": "once",
+        "animated": false
+      },
+      "android": {
+        "launchImages": {
+          "xxxhdpi": "https://gonativeio.s3.amazonaws.com/app_files/wemlanx/1788940114816_murx6khmaqhny_720x720.png",
+          "xxhdpi": "https://gonativeio.s3.amazonaws.com/app_files/wemlanx/1788940114789_0hyfbmrf81mw0_540x540.png",
+          "xhdpi": "https://gonativeio.s3.amazonaws.com/app_files/wemlanx/1788940114777_dep8etk52n6a2_360x360.png",
+          "hdpi": "https://gonativeio.s3.amazonaws.com/app_files/wemlanx/1788940114764_mhjwnbqw9t9fw_270x270.png",
+          "mdpi": "https://gonativeio.s3.amazonaws.com/app_files/wemlanx/1788940114753_2yyunj2mu3y5a_180x180.png"
+        },
+        "launchImagesDark": {
+          "xxxhdpi": "https://gonativeio.s3.amazonaws.com/app_files/wemlanx/1788940114964_13kjk73xghfkp_720x720.png",
+          "xxhdpi": "https://gonativeio.s3.amazonaws.com/app_files/wemlanx/1788940114920_ctar61dn7jwkw_540x540.png",
+          "xhdpi": "https://gonativeio.s3.amazonaws.com/app_files/wemlanx/1788940114884_hu91qffp6pha4_360x360.png",
+          "hdpi": "https://gonativeio.s3.amazonaws.com/app_files/wemlanx/1788940114864_d64fxaab33v3p_270x270.png",
+          "mdpi": "https://gonativeio.s3.amazonaws.com/app_files/wemlanx/1788940114849_zqr25wyckx6mg_180x180.png"
+        },
+        "showSplash": true,
+        "backgroundColor": "#FFFFFF",
+        "backgroundColorDark": "#e4895b",
+        "animation": null,
+        "animationDark": null,
+        "animationFrame": null,
+        "animationFrameDark": null,
+        "animationLoop": "infinite",
+        "animated": false
+      }
+    },
+    "transitionInteractiveDelayMax": 0.2,
+    "menuAnimationDuration": 0.15,
+    "iosTheme": "default",
+    "androidTabPressedBackgroundColor": "#CCCCCC",
+    "androidTabPressedBackgroundColorDark": "#999999",
+    "androidBackgroundColor": "#FFFFFF",
+    "androidBackgroundColorDark": "#333333",
+    "icon": "https://s3.amazonaws.com/gonativeio/app_files/wemlanx/app_icon_android.png",
+    "iosIcon": "https://s3.amazonaws.com/gonativeio/app_files/wemlanx/app_icon_android.png",
+    "customIcons": {},
+    "iosDarkMode": "auto",
+    "iosEnableBlurInStatusBar": false,
+    "iosStatusBarStyle": "auto",
+    "iosEnableOverlayInStatusBar": false,
+    "iosStatusBarBackgroundColor": "#ffffffff",
+    "iosStatusBarBackgroundColorDark": "#000000",
+    "androidStatusBarStyle": "auto",
+    "androidEnableOverlayInStatusBar": false,
+    "androidStatusBarBackgroundColor": "#5C5C5C",
+    "androidStatusBarBackgroundColorDark": "#333333",
+    "iosTintColor": "#0E0D08",
+    "iosTintColorDark": "#ffffff",
+    "androidIcon": "https://s3.amazonaws.com/gonativeio/app_files/wemlanx/app_icon_android.png",
+    "androidTheme": "auto",
+    "androidAccentColor": "#009688",
+    "androidAccentColorDark": "#2f3d3c",
+    "androidSystemNavBarColor": "#FFFFFF",
+    "androidSystemNavBarColorDark": "#000000",
+    "androidPullToRefreshColor": "#1A100B",
+    "androidPullToRefreshColorDark": "#FFFFFF",
+    "iosActivityIndicatorColor": "#808080",
+    "iosActivityIndicatorColorDark": "#808080",
+    "androidActivityIndicatorColor": "#808080",
+    "androidActivityIndicatorColorDark": "#808080",
+    "androidWebviewTextZoom": null,
+    "hideWebviewAlpha": 0.5,
+    "forceViewportWidth": null,
+    "initialZoom": null,
+    "pinchToZoom": null,
+    "iosDynamicType": null,
+    "iosGlassDesign": false,
+    "iosTransparentNavBar": true,
+    "androidSwipeNavigationBackgroundColor": "#FFFFFF",
+    "androidSwipeNavigationBackgroundColorDark": "#333333",
+    "androidSwipeNavigationActiveColor": "#000000",
+    "androidSwipeNavigationActiveColorDark": "#FFFFFF",
+    "androidSwipeNavigationInactiveColor": "#666666",
+    "androidSwipeNavigationInactiveColorDark": "#666666",
+    "iosHideNavBarOnScroll": false,
+    "androidHideNavBarOnScroll": false,
+    "navigationTitleImageLocation": "https://s3.amazonaws.com/gonativeio/app_files/wemlanx/app_icon_android.png",
+    "navigationTitleImageLocationDark": "https://s3.amazonaws.com/gonativeio/app_files/wemlanx/app_icon_android.png",
+    "iosTitleColor": "#0E0D08",
+    "iosTitleColorDark": "#ffffff",
+    "iosNavigationBarTintColor": "#f8f8f8",
+    "iosNavigationBarTintColorDark": "#202020",
+    "androidActionBarBackgroundColor": "#FFFFFF",
+    "androidActionBarBackgroundColorDark": "#333333",
+    "androidHeaderImage": "https://s3.amazonaws.com/gonativeio/app_files/wemlanx/app_icon_android.png",
+    "androidHeaderImageDark": "https://s3.amazonaws.com/gonativeio/app_files/wemlanx/app_icon_android.png",
+    "androidActionBarForegroundColor": "#1A100B",
+    "androidActionBarForegroundColorDark": "#FFFFFF",
+    "iosSidebarBackgroundColor": "#f8f8f8",
+    "iosSidebarBackgroundColorDark": "#202020",
+    "iosSidebarFont": "Default",
+    "iosHeaderImage": "https://s3.amazonaws.com/gonativeio/app_files/wemlanx/app_icon_android.png",
+    "iosHeaderImageDark": "https://s3.amazonaws.com/gonativeio/app_files/wemlanx/app_icon_android.png",
+    "iosSidebarTextColor": "#0E0D08",
+    "iosSidebarTextColorDark": "#ffffff",
+    "androidSidebarBackgroundColor": "#FFFFFF",
+    "androidSidebarBackgroundColorDark": "#333333",
+    "androidSidebarForegroundColor": "#1A100B",
+    "androidSidebarForegroundColorDark": "#FFFFFF",
+    "androidSidebarSeparatorColor": "#CCCCCC",
+    "androidSidebarSeparatorColorDark": "#666666",
+    "androidSidebarHighlightColor": "#1A100B",
+    "androidSidebarHighlightColorDark": "#FFFFFF",
+    "androidShowLogoInSideBar": true,
+    "androidShowAppNameInSideBar": true,
+    "iosHideTabBarOnScroll": false,
+    "androidHideTabBarOnScroll": false,
+    "androidTabBarBackgroundColor": "#FFFFFF",
+    "androidTabBarBackgroundColorDark": "#333333",
+    "androidTabBarTextColor": "#949494",
+    "androidTabBarTextColorDark": "#FFFFFF",
+    "androidTabBarIndicatorColor": "#1A100B",
+    "androidTabBarIndicatorColorDark": "#666666",
+    "iosTabBarTintColor": "#f8f8f8",
+    "iosTabBarTintColorDark": "#000000",
+    "iosTabBarInactiveColor": "#A1A1A1",
+    "iosTabBarInactiveColorDark": "#818181",
+    "disableAnimations": false,
+    "navigationTitleImage": false,
+    "androidHideTitleInActionBar": false,
+    "showNavigationBar": false,
+    "showActionBar": false
+  },
+  "allowZoom": null,
+  "contextMenu": {
+    "enabled": false,
+    "linkActions": [
+      "copyLink",
+      "openExternal"
+    ]
+  },
+  "security": {
+    "network": {
+      "allowInsecure": null
+    }
+  },
+  "permissions": {
+    "usesGeolocation": false,
+    "iosLocationUsageDescription": "",
+    "iosCameraUsageDescription": "",
+    "iosPhotoLibraryUsageDescription": "",
+    "iosMicrophoneUsageDescription": "",
+    "enableWebRTCamera": false,
+    "enableWebRTCMicrophone": false,
+    "androidDownloadToPublicStorage": false,
+    "iOSATTUserTrackingDescription": "",
+    "iOSRequestATTConsentOnLoad": false
+  },
+  "services": {
+    "androidGoogleServicesJson": {
+      "name": "Money Manager Pro",
+      "short_name": "Money Pro",
+      "description": "Personal Finance Manager — track income, expenses, loans and savings goals",
+      "start_url": "/money-manager-pro/index.html",
+      "scope": "/money-manager-pro/",
+      "display": "standalone",
+      "orientation": "portrait",
+      "background_color": "#ffffff",
+      "theme_color": "#1565c0",
+      "lang": "en-IN",
+      "categories": [
+        "finance",
+        "productivity"
+      ],
+      "icons": [
+        {
+          "src": "/money-manager-pro/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png",
+          "purpose": "any maskable"
+        },
+        {
+          "src": "/money-manager-pro/icon-512.png",
+          "sizes": "512x512",
+          "type": "image/png",
+          "purpose": "any maskable"
+        }
+      ],
+      "screenshots": [
+        {
+          "src": "/money-manager-pro/screenshot1.png",
+          "sizes": "1080x1920",
+          "type": "image/png",
+          "form_factor": "narrow",
+          "label": "Home Screen"
+        }
+      ],
+      "version": "1.1.0"
+    },
+    "oneSignalV5": {
+      "active": false
+    },
+    "firebaseMessaging": {
+      "active": false,
+      "autoRegister": true,
+      "showForegroundNotifications": true
+    }
+  },
+  "developmentTools": {
+    "enableWebConsoleLogs": false
+  }
+}
