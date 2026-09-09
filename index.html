@@ -188,7 +188,7 @@ body{background:var(--bg);color:var(--text);display:flex;flex-direction:column;t
 
 
 /* DR / CR INCOME & EXPENDITURE STATEMENT */
-.ie-statement{display:grid;grid-template-columns:1fr 1fr;border:2px solid #263238;border-radius:12px;overflow:hidden;background:#fff;margin-bottom:14px;}
+.ie-statement{display:grid;grid-template-columns:1fr 1fr;border:2px solid #263238;border-radius:12px;overflow:hidden;background:#eef9f3;margin-bottom:14px;}
 .ie-side{min-width:0;display:flex;flex-direction:column;}
 .ie-side:first-child{border-right:2px solid #263238;}
 .ie-head{display:flex;justify-content:space-between;gap:8px;padding:10px;background:#263238;color:#fff;font-size:0.74rem;font-weight:800;}
@@ -739,9 +739,12 @@ body{background:var(--bg);color:var(--text);display:flex;flex-direction:column;t
       <div class="panel">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
           <h3 style="margin-bottom:0;">Recent Transactions</h3>
-          <select class="form-select" style="width:auto;padding:5px 8px;font-size:0.75rem;" id="txnFilter" onchange="renderHome()">
-            <option value="all">All</option><option value="income">Income</option><option value="expense">Expense</option>
-          </select>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <input type="date" class="form-input" style="width:132px;padding:5px 7px;font-size:0.72rem;" id="homeTxnDate" onchange="renderHome()"/>
+            <select class="form-select" style="width:auto;padding:5px 8px;font-size:0.75rem;" id="txnFilter" onchange="renderHome()">
+              <option value="all">All</option><option value="income">Income</option><option value="expense">Expense</option>
+            </select>
+          </div>
         </div>
         <div id="recentTxns"></div>
       </div>
@@ -1009,10 +1012,14 @@ body{background:var(--bg);color:var(--text);display:flex;flex-direction:column;t
           </div>
           <button onclick="addCategory()" style="width:100%;padding:10px;background:linear-gradient(135deg,#00b894,#4d96ff);border:none;border-radius:10px;color:#fff;font-weight:700;font-size:0.85rem;cursor:pointer;font-family:var(--font);">+ Add</button>
         </div>
-        <div style="font-size:0.82rem;font-weight:700;color:#00b894;margin-bottom:8px;">💰 Income (<span id="incomeCatCount">0</span>)</div>
-        <div id="incomeCatList" style="margin-bottom:14px;"></div>
-        <div style="font-size:0.82rem;font-weight:700;color:#ff6b6b;margin-bottom:8px;">💸 Expense (<span id="expenseCatCount">0</span>)</div>
-        <div id="expenseCatList"></div>
+        <details style="margin-bottom:10px;border:1.5px solid var(--border);border-radius:10px;padding:8px;background:var(--bg);">
+          <summary style="font-size:0.82rem;font-weight:700;color:#00b894;cursor:pointer;">💰 Income Items (<span id="incomeCatCount">0</span>)</summary>
+          <div id="incomeCatList" style="margin-top:10px;"></div>
+        </details>
+        <details style="border:1.5px solid var(--border);border-radius:10px;padding:8px;background:var(--bg);">
+          <summary style="font-size:0.82rem;font-weight:700;color:#ff6b6b;cursor:pointer;">💸 Expense Items (<span id="expenseCatCount">0</span>)</summary>
+          <div id="expenseCatList" style="margin-top:10px;"></div>
+        </details>
         <button onclick="resetCategories()" style="width:100%;padding:10px;background:none;border:2px solid var(--border);border-radius:10px;color:var(--muted);font-weight:700;font-size:0.8rem;cursor:pointer;margin-top:12px;font-family:var(--font);">🔄 Reset to Default</button>
       </div>
 
@@ -1048,64 +1055,6 @@ body{background:var(--bg);color:var(--text);display:flex;flex-direction:column;t
         </div>
         <div style="font-size:0.72rem;color:var(--muted);line-height:1.6;padding:8px;background:var(--bg);border-radius:8px;">
           💡 <strong>Tip:</strong> Your encryption key is derived from your password. Never share your password with anyone. If you forget your password, data cannot be recovered.
-        </div>
-      </div>
-
-      <!-- ENCRYPTION STATUS -->
-      <div class="panel">
-        <h3>🔐 Data Encryption</h3>
-        <div style="background:linear-gradient(135deg,#e8f5e9,#f1f8e9);border-radius:14px;padding:14px;border:2px solid #a5d6a7;margin-bottom:12px;">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-            <div style="font-size:2rem;">🔐</div>
-            <div>
-              <div style="font-size:0.85rem;font-weight:800;color:#1b5e20;">AES-256-GCM Active</div>
-              <div style="font-size:0.7rem;color:#388e3c;margin-top:2px;">Military-grade encryption is protecting your data</div>
-            </div>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
-            <div style="background:rgba(255,255,255,0.8);border-radius:8px;padding:7px;text-align:center;">
-              <div style="font-size:0.6rem;color:#555;font-weight:700;">ALGORITHM</div>
-              <div style="font-size:0.72rem;font-weight:800;color:#1b5e20;">AES-256-GCM</div>
-            </div>
-            <div style="background:rgba(255,255,255,0.8);border-radius:8px;padding:7px;text-align:center;">
-              <div style="font-size:0.6rem;color:#555;font-weight:700;">KEY METHOD</div>
-              <div style="font-size:0.72rem;font-weight:800;color:#1b5e20;">PBKDF2 SHA-256</div>
-            </div>
-            <div style="background:rgba(255,255,255,0.8);border-radius:8px;padding:7px;text-align:center;">
-              <div style="font-size:0.6rem;color:#555;font-weight:700;">ITERATIONS</div>
-              <div style="font-size:0.72rem;font-weight:800;color:#1b5e20;">200,000</div>
-            </div>
-            <div style="background:rgba(255,255,255,0.8);border-radius:8px;padding:7px;text-align:center;">
-              <div style="font-size:0.6rem;color:#555;font-weight:700;">KEY LIVES IN</div>
-              <div style="font-size:0.72rem;font-weight:800;color:#1b5e20;">Memory Only</div>
-            </div>
-          </div>
-        </div>
-        <div style="font-size:0.72rem;color:var(--muted);line-height:1.6;padding:8px 10px;background:var(--bg);border-radius:8px;border:1px solid var(--border);">
-          💡 Your data is encrypted using your password. Even if someone extracts your phone storage, they cannot read your financial data. Keep your password safe — data cannot be recovered without it.
-        </div>
-      </div>
-
-      <!-- ENCRYPTION STATUS -->
-      <div class="panel">
-        <h3>🔐 Data Encryption</h3>
-        <div style="background:linear-gradient(135deg,#e8f5e9,#f1f8e9);border-radius:14px;padding:14px;border:2px solid #a5d6a7;margin-bottom:12px;">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-            <div style="font-size:2rem;">🔐</div>
-            <div>
-              <div style="font-size:0.85rem;font-weight:800;color:#1b5e20;">AES-256-GCM Active</div>
-              <div style="font-size:0.7rem;color:#388e3c;margin-top:2px;">Military-grade encryption protecting your data</div>
-            </div>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
-            <div style="background:rgba(255,255,255,0.8);border-radius:8px;padding:7px;text-align:center;"><div style="font-size:0.6rem;color:#555;font-weight:700;">ALGORITHM</div><div style="font-size:0.72rem;font-weight:800;color:#1b5e20;">AES-256-GCM</div></div>
-            <div style="background:rgba(255,255,255,0.8);border-radius:8px;padding:7px;text-align:center;"><div style="font-size:0.6rem;color:#555;font-weight:700;">KEY METHOD</div><div style="font-size:0.72rem;font-weight:800;color:#1b5e20;">PBKDF2 SHA-256</div></div>
-            <div style="background:rgba(255,255,255,0.8);border-radius:8px;padding:7px;text-align:center;"><div style="font-size:0.6rem;color:#555;font-weight:700;">ITERATIONS</div><div style="font-size:0.72rem;font-weight:800;color:#1b5e20;">200,000</div></div>
-            <div style="background:rgba(255,255,255,0.8);border-radius:8px;padding:7px;text-align:center;"><div style="font-size:0.6rem;color:#555;font-weight:700;">KEY LIVES IN</div><div style="font-size:0.72rem;font-weight:800;color:#1b5e20;">Memory Only</div></div>
-          </div>
-        </div>
-        <div style="font-size:0.72rem;color:var(--muted);line-height:1.6;padding:8px 10px;background:var(--bg);border-radius:8px;border:1px solid var(--border);">
-          💡 Your data is encrypted using your password. Even if someone extracts your phone storage, they cannot read your financial data. Keep your password safe — data cannot be recovered without it.
         </div>
       </div>
 
@@ -2671,7 +2620,7 @@ function renderStatement(){
       <div class="stmt-summary-row"><span class="stmt-summary-label" style="font-size:0.95rem;">⚖️ Closing Balance</span><span class="stmt-summary-val" style="font-size:1.05rem;">${balance>=0?'Surplus: ':'Deficit: '}${fmt(Math.abs(balance))}</span></div>
     </div>
     <div style="font-size:0.72rem;color:var(--muted);text-align:center;margin:8px 0 12px;">The balance is automatically added to the smaller side so that Debit and Credit totals are equal.</div>
-    <button class="stmt-print-btn" onclick="window.print()">🖨️ Print / Save as PDF</button>`;
+    <button class="stmt-print-btn" onclick="printStatement()">🖨️ Print / Save as PDF</button>`;
 }
 
 // ═══════════════════════════════════════
@@ -2695,12 +2644,15 @@ function renderHome(){
   document.getElementById('st-saving').textContent=(mInc>0?Math.round((mSav/mInc)*100):0)+'%';
   document.getElementById('st-goals').textContent=goals.length;
   const filter=document.getElementById('txnFilter').value;
-  let filtered=[...transactions];
+  const dateInput=document.getElementById('homeTxnDate');
+  if(dateInput && !dateInput.value) dateInput.value=today;
+  const selectedDate=dateInput?.value||today;
+  let filtered=[...transactions].filter(t=>t.date===selectedDate);
   if(filter==='income')filtered=filtered.filter(t=>t.type==='income');
   if(filter==='expense')filtered=filtered.filter(t=>t.type==='expense');
-  filtered=filtered.slice(0,20);
+  filtered.sort((a,b)=>b.id-a.id);
   const container=document.getElementById('recentTxns');
-  if(!filtered.length){container.innerHTML=`<div style="text-align:center;padding:20px;color:var(--muted);font-size:0.82rem;">No transactions yet. Add your first one!</div>`;return;}
+  if(!filtered.length){container.innerHTML=`<div style="text-align:center;padding:20px;color:var(--muted);font-size:0.82rem;">No transactions for the selected date.</div>`;return;}
   container.innerHTML=filtered.map(t=>{
     const cat=[...INCOME_CATS,...EXPENSE_CATS].find(c=>c.name===t.category)||{emoji:'💰'};
     const d=new Date(t.date).toLocaleDateString('en-IN',{day:'numeric',month:'short'});
@@ -2822,66 +2774,50 @@ function exportTxt(){
 /* old downloadFile removed */
 
 async function downloadJSONBackup(name, content){
-  const blob = new Blob([content], {type:'application/json;charset=utf-8'});
-  const file = new File([blob], name, {type:'application/json;charset=utf-8', lastModified:Date.now()});
-
-  // 1. Desktop/Android browsers that support the real Save As picker.
-  if(typeof window.showSaveFilePicker === 'function'){
-    try{
-      const handle = await window.showSaveFilePicker({
-        suggestedName:name,
-        types:[{description:'JSON Backup',accept:{'application/json':['.json']}}]
-      });
-      const writable = await handle.createWritable();
-      await writable.write(blob);
-      await writable.close();
-      showToast('✅ Backup saved successfully!');
-      return;
-    }catch(e){
-      if(e && e.name==='AbortError') return;
-      console.log('Save picker unavailable:', e);
-    }
-  }
-
-  // 2. Preferred mobile fallback. This opens Android's share sheet so the user
-  // can explicitly choose where to place the backup (Files, Drive, etc.).
-  // This is much safer than navigating to a data: URL, which can display the
-  // JSON contents inside another app instead of creating a file.
+  const blob=new Blob([content],{type:'application/json'});
+  const file=new File([blob],name,{type:'application/json'});
+  // Median/WebView: try the native Android share/save targets first.
   try{
-    if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
-      await navigator.share({
-        files:[file],
-        title:'Money Manager Pro Backup',
-        text:'Save your Money Manager Pro backup file'
-      });
-      showToast('📂 Choose a location or app to save your backup.');
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file],title:'Money Manager Pro Backup',text:'JSON backup'});
+      showToast('📂 Choose Files, Drive or another destination to save your backup.');
       return;
     }
   }catch(e){
     if(e && e.name==='AbortError') return;
-    console.log('File sharing unavailable:', e);
+    console.log('Native file sharing unavailable',e);
   }
-
-  // 3. Standard download fallback. Use a Blob URL, never a data: URL.
-  // Blob URLs prevent the WebView from treating the JSON as page content.
+  // Standard browser Save As picker.
+  if(typeof window.showSaveFilePicker==='function'){
+    try{
+      const handle=await window.showSaveFilePicker({suggestedName:name,types:[{description:'JSON Backup',accept:{'application/json':['.json']}}]});
+      const writable=await handle.createWritable(); await writable.write(blob); await writable.close();
+      showToast('✅ Backup saved successfully!'); return;
+    }catch(e){ if(e && e.name==='AbortError') return; }
+  }
+  // WebView fallback: Blob URL download. Do not use data: URLs because Median may open them inside the WebView.
   try{
     const url=URL.createObjectURL(blob);
     const a=document.createElement('a');
-    a.href=url;
-    a.download=name;
-    a.style.display='none';
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(()=>{
-      try{a.remove();URL.revokeObjectURL(url);}catch(e){}
-    },2000);
-    showToast('💾 Backup created. Check your Downloads folder.');
-    return;
+    a.href=url; a.download=name; a.rel='noopener'; a.style.display='none';
+    document.body.appendChild(a); a.click(); setTimeout(()=>{a.remove();URL.revokeObjectURL(url);},1500);
+    showToast('💾 Backup created. Check Downloads.');
   }catch(e){
     console.error('Backup download failed',e);
+    showToast('⚠️ This APK does not expose a local file-save API. Enable a Median native download/save capability for guaranteed saving.');
   }
+}
 
-  showToast('⚠️ Backup could not be saved on this device.');
+function printStatement(){
+  const statement=document.querySelector('#reportContent');
+  if(!statement){showToast('⚠️ Open the Income & Expenditure Statement first.');return;}
+  // First try the normal Android/WebView print implementation.
+  try{
+    window.print();
+    setTimeout(()=>showToast('If the print dialog does not appear in the APK, use the HTML export fallback below.'),800);
+  }catch(e){
+    showToast('⚠️ Print is not available in this WebView.');
+  }
 }
 
 function exportTxt(){
@@ -5217,7 +5153,7 @@ window.onload=async()=>{
   <div class="modal-sheet">
     <h3>📄 Loan Statement</h3>
     <div id="loanStmtContent"></div>
-    <button class="stmt-print-btn" onclick="window.print()">🖨️ Print / Save as PDF</button>
+    <button class="stmt-print-btn" onclick="printStatement()">🖨️ Print / Save as PDF</button>
     <button class="modal-close" onclick="closeModal('loanStmtModal')">Close</button>
   </div>
 </div>
