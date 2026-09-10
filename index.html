@@ -1090,12 +1090,10 @@ body{background:var(--bg);color:var(--text);display:flex;flex-direction:column;t
       <!-- EXPORT -->
       <div class="panel">
         <h3>📤 Export & Backup</h3>
-        <button class="export-btn" onclick="exportCSV()">📊 Export as CSV (Excel)</button>
         <button class="export-btn" onclick="exportJSON()">💾 Export as JSON (Backup)</button>
         <div style="font-size:0.7rem;color:var(--muted);margin-top:6px;padding:8px;background:var(--bg);border-radius:8px;border:1px solid var(--border);">
           📱 <strong>About file storage:</strong> Your data is securely saved inside this app on your device using encrypted IndexedDB storage. On Android, this is managed automatically by the system — you cannot set a custom folder path. Use <em>Export as JSON</em> to backup your data to Google Drive, WhatsApp or any folder of your choice.
         </div>
-        <button class="export-btn" onclick="exportTxt()">📄 Export as Text Report</button>
         <div style="margin-top:12px;padding-top:12px;border-top:2px solid var(--border);">
           <div style="font-size:0.88rem;font-weight:700;margin-bottom:10px;">📥 Restore</div>
           <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importJSON()"/>
@@ -1123,7 +1121,7 @@ body{background:var(--bg);color:var(--text);display:flex;flex-direction:column;t
         <div style="background:linear-gradient(135deg,#1565c0,#4d96ff);border-radius:16px;padding:20px;color:#fff;text-align:center;margin-bottom:12px;">
           <div style="font-size:2.5rem;margin-bottom:8px;">💰</div>
           <div style="font-size:1rem;font-weight:800;letter-spacing:0.02em;">Money Manager Pro</div>
-          <div style="font-size:0.72rem;opacity:0.85;margin-top:4px;">Version 1.3.0 · v18</div>
+          <div style="font-size:0.72rem;opacity:0.85;margin-top:4px;">Version 1.3.0 · v19</div>
           <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.25);">
             <div style="font-size:0.72rem;opacity:0.7;">Developed by</div>
             <div style="font-size:0.92rem;font-weight:800;margin-top:2px;">Ullasan KV</div>
@@ -2720,11 +2718,6 @@ function saveEdit(){
 // ═══════════════════════════════════════
 // EXPORT
 // ═══════════════════════════════════════
-function exportCSV(){
-  let csv='Date,Type,Category,Amount,Note\n';
-  transactions.forEach(t=>{csv+=`${t.date},${t.type},${t.category},${t.amount},"${t.note||''}"\n`;});
-  downloadFile('ullasan-money-'+Date.now()+'.csv',csv,'text/csv');showToast('📊 CSV exported!');
-}
 async function exportJSON(){
   try{
     // Decrypt and read all settings-stored modules
@@ -2763,48 +2756,38 @@ async function exportJSON(){
     showToast('⚠️ Export failed: '+e.message);
   }
 }
-function exportTxt(){
-  const mt=getMonthTxns();
-  const inc=mt.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
-  const exp=mt.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
-  let txt=`ULLASAN'S MONEY MANAGER PRO\nGenerated: ${new Date().toLocaleDateString('en-IN')}\n${'='.repeat(40)}\n\nTHIS MONTH\nIncome: ${fmt(inc)}\nExpense: ${fmt(exp)}\nNet: ${fmt(inc-exp)}\n\nALL TRANSACTIONS\n${'-'.repeat(40)}\n`;
-  transactions.forEach(t=>{txt+=`${t.date} | ${t.type.toUpperCase()} | ${t.category} | ${fmt(t.amount)}${t.note?' | '+t.note:''}\n`;});
-  downloadFile('ullasan-report-'+Date.now()+'.txt',txt,'text/plain');showToast('📄 Text report exported!');
-}
 /* old downloadFile removed */
 
 async function downloadJSONBackup(name, content){
-  const blob=new Blob([content],{type:'application/json'});
-  const file=new File([blob],name,{type:'application/json'});
-  // Median/WebView: try the native Android share/save targets first.
+  const blob=new Blob([content],{type:'application/json;charset=utf-8'});
   try{
-    if(navigator.canShare && navigator.canShare({files:[file]})){
-      await navigator.share({files:[file],title:'Money Manager Pro Backup',text:'JSON backup'});
-      showToast('📂 Choose Files, Drive or another destination to save your backup.');
-      return;
-    }
-  }catch(e){
-    if(e && e.name==='AbortError') return;
-    console.log('Native file sharing unavailable',e);
-  }
-  // Standard browser Save As picker.
-  if(typeof window.showSaveFilePicker==='function'){
-    try{
-      const handle=await window.showSaveFilePicker({suggestedName:name,types:[{description:'JSON Backup',accept:{'application/json':['.json']}}]});
-      const writable=await handle.createWritable(); await writable.write(blob); await writable.close();
-      showToast('✅ Backup saved successfully!'); return;
-    }catch(e){ if(e && e.name==='AbortError') return; }
-  }
-  // WebView fallback: Blob URL download. Do not use data: URLs because Median may open them inside the WebView.
-  try{
-    const url=URL.createObjectURL(blob);
+    const b64=btoa(unescape(encodeURIComponent(content)));
+    const dataUri='data:application/json;charset=utf-8;base64,'+b64;
     const a=document.createElement('a');
-    a.href=url; a.download=name; a.rel='noopener'; a.style.display='none';
-    document.body.appendChild(a); a.click(); setTimeout(()=>{a.remove();URL.revokeObjectURL(url);},1500);
+    a.href=dataUri;
+    a.download=name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
     showToast('💾 Backup created. Check Downloads.');
   }catch(e){
-    console.error('Backup download failed',e);
-    showToast('⚠️ This APK does not expose a local file-save API. Enable a Median native download/save capability for guaranteed saving.');
+    try{
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');
+      a.href=url; a.download=name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(()=>URL.revokeObjectURL(url),1000);
+      showToast('💾 Backup created. Check Downloads.');
+    }catch(e2){
+      try{
+        window.open(URL.createObjectURL(blob),'_blank');
+      }catch(e3){
+        console.error('Backup download failed',e3);
+        showToast('⚠️ Backup download failed.');
+      }
+    }
   }
 }
 
@@ -2820,14 +2803,6 @@ function printStatement(){
   }
 }
 
-function exportTxt(){
-  const mt=getMonthTxns();
-  const inc=mt.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
-  const exp=mt.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
-  let txt=`ULLASAN'S MONEY MANAGER PRO\nGenerated: ${new Date().toLocaleDateString('en-IN')}\n${'='.repeat(40)}\n\nTHIS MONTH\nIncome: ${fmt(inc)}\nExpense: ${fmt(exp)}\nNet: ${fmt(inc-exp)}\n\nALL TRANSACTIONS\n${'-'.repeat(40)}\n`;
-  transactions.forEach(t=>{txt+=`${t.date} | ${t.type.toUpperCase()} | ${t.category} | ${fmt(t.amount)}${t.note?' | '+t.note:''}\n`;});
-  downloadFile('ullasan-report-'+Date.now()+'.txt',txt,'text/plain');showToast('📄 Text report exported!');
-}
 function downloadFile(name, content, type){
   try{
     // Method 1: Base64 data URI — works on Android WebView & Median
