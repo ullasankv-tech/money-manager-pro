@@ -2760,35 +2760,99 @@ async function exportJSON(){
 
 async function downloadJSONBackup(name, content){
   const blob=new Blob([content],{type:'application/json;charset=utf-8'});
+
+  // ============================================================
+  // NATIVE APK PATH (Capacitor)
+  // Do NOT open the JSON in a browser/WebView.  If the Capacitor
+  // Filesystem + Share plugins are present, write the backup to the
+  // native app Documents area and hand the file to Android's share
+  // sheet. This avoids the old window.open() behaviour that could
+  // cause Android to open the JSON in ChatGPT.
+  // ============================================================
   try{
-    const b64=btoa(unescape(encodeURIComponent(content)));
-    const dataUri='data:application/json;charset=utf-8;base64,'+b64;
+    const cap = window.Capacitor;
+    const plugins = cap && cap.Plugins ? cap.Plugins : null;
+    const fs = plugins && plugins.Filesystem;
+    const share = plugins && plugins.Share;
+
+    if(fs && typeof fs.writeFile === 'function'){
+      const Encoding = fs.Encoding || {};
+      const writeOptions = {
+        path: name,
+        data: content,
+        directory: 'DOCUMENTS',
+        recursive: true
+      };
+      if(Encoding.UTF8) writeOptions.encoding = Encoding.UTF8;
+
+      await fs.writeFile(writeOptions);
+
+      if(share && typeof share.share === 'function'){
+        let uriResult = null;
+        try{
+          if(typeof fs.getUri === 'function'){
+            uriResult = await fs.getUri({path:name,directory:'DOCUMENTS'});
+          }
+        }catch(uriErr){
+          console.warn('Could not get native backup URI:',uriErr);
+        }
+
+        const shareOptions = {
+          title: 'Money Manager Pro Backup',
+          text: 'Money Manager Pro JSON backup',
+          dialogTitle: 'Save or share your Money Manager Pro backup'
+        };
+        if(uriResult && uriResult.uri) shareOptions.url = uriResult.uri;
+        await share.share(shareOptions);
+        showToast('💾 Backup saved. Choose Files/Drive in the Android share sheet.');
+        return;
+      }
+
+      showToast('💾 Backup saved in the app Documents folder.');
+      return;
+    }
+  }catch(nativeErr){
+    console.warn('Native Capacitor backup unavailable:',nativeErr);
+  }
+
+  // ============================================================
+  // BROWSER PATH
+  // Keep normal HTML/PWA downloads working exactly as before, but
+  // NEVER use window.open() as a fallback. Opening a data/blob URL
+  // is what can make Android hand the JSON to another app (including
+  // ChatGPT) instead of treating it as a saved backup file.
+  // ============================================================
+  try{
     const a=document.createElement('a');
-    a.href=dataUri;
+    a.href=URL.createObjectURL(blob);
     a.download=name;
+    a.style.display='none';
     document.body.appendChild(a);
     a.click();
-    document.body.removeChild(a);
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href),3000);
     showToast('💾 Backup created. Check Downloads.');
+    return;
   }catch(e){
-    try{
-      const url=URL.createObjectURL(blob);
-      const a=document.createElement('a');
-      a.href=url; a.download=name;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(()=>URL.revokeObjectURL(url),1000);
-      showToast('💾 Backup created. Check Downloads.');
-    }catch(e2){
-      try{
-        window.open(URL.createObjectURL(blob),'_blank');
-      }catch(e3){
-        console.error('Backup download failed',e3);
-        showToast('⚠️ Backup download failed.');
+    console.error('Backup download failed:',e);
+  }
+
+  // Last safe browser fallback: Android/Web Share, if available.
+  try{
+    if(navigator.share && typeof File !== 'undefined'){
+      const file=new File([content],name,{type:'application/json'});
+      if(!navigator.canShare || navigator.canShare({files:[file]})){
+        await navigator.share({title:'Money Manager Pro Backup',files:[file]});
+        showToast('💾 Backup shared successfully.');
+        return;
       }
     }
+  }catch(shareErr){
+    if(shareErr && shareErr.name === 'AbortError') return;
+    console.error('Share fallback failed:',shareErr);
   }
+
+  showToast('⚠️ Backup could not be saved on this device.');
 }
 
 function printStatement(){
